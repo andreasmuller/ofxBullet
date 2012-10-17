@@ -9,10 +9,10 @@
 
 #pragma once
 
-#include "ofxBulletBaseShape.h"
+#include "ofxBulletBaseRigidShape.h"
 #include "ofVbo.h"
 
-class ofxBulletCylinder : public ofxBulletBaseShape {
+class ofxBulletCylinder : public ofxBulletBaseRigidShape {
 public:
 	ofxBulletCylinder();
 	~ofxBulletCylinder();

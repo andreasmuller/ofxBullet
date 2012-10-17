@@ -28,20 +28,20 @@ void ofxBulletCustomShape::init( btCompoundShape* a_colShape, ofVec3f a_centroid
 }
 
 //--------------------------------------------------------------
-void ofxBulletCustomShape::create( btDiscreteDynamicsWorld* a_world, ofVec3f a_loc, float a_mass ) {
+void ofxBulletCustomShape::create( btDynamicsWorld* a_world, ofVec3f a_loc, float a_mass ) {
 	btTransform tr = ofGetBtTransformFromVec3f( a_loc );
 	create( a_world, tr, a_mass );
 }
 
 //--------------------------------------------------------------
-void ofxBulletCustomShape::create( btDiscreteDynamicsWorld* a_world, ofVec3f a_loc, ofQuaternion a_rot, float a_mass ) {
+void ofxBulletCustomShape::create( btDynamicsWorld* a_world, ofVec3f a_loc, ofQuaternion a_rot, float a_mass ) {
 	btTransform tr	= ofGetBtTransformFromVec3f( a_loc );
 	tr.setRotation( btQuaternion(btVector3(a_rot.x(), a_rot.y(), a_rot.z()), a_rot.w()) );
 	create( a_world, tr, a_mass );
 }
 
 //--------------------------------------------------------------
-void ofxBulletCustomShape::create( btDiscreteDynamicsWorld* a_world, btTransform a_bt_tr, float a_mass ) {
+void ofxBulletCustomShape::create( btDynamicsWorld* a_world, btTransform a_bt_tr, float a_mass ) {
 	_world = a_world;
 	_mass = a_mass;
 	if(!_bInited) {

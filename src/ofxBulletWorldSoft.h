@@ -7,26 +7,26 @@
  *
  */
 
-#pragma once 
+#pragma once
 
 // http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 #include "ofMain.h"
 #include "btBulletDynamicsCommon.h"
+#include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
 #include "ofxBulletUtils.h"
 #include "ofxBulletConstants.h"
-#include "ofxBulletBaseRigidShape.h"
 #include "ofxBulletCollisionData.h"
 #include "ofxBulletMousePickEvent.h"
 #include "GLDebugDrawer.h"
 #include "ofxBulletRaycastData.h"
 
-class ofxBulletWorldRigid {
+class ofxBulletWorldSoft {
 public:
 	ofEvent<ofxBulletCollisionData> COLLISION_EVENT;
 	ofEvent<ofxBulletMousePickEvent> MOUSE_PICK_EVENT;
 	
-	ofxBulletWorldRigid();
-	~ofxBulletWorldRigid();
+	ofxBulletWorldSoft();
+	~ofxBulletWorldSoft();
 	
 	void setup();
 	void update();
@@ -68,7 +68,7 @@ public:
 	btCollisionDispatcher*					dispatcher;
 	btSequentialImpulseConstraintSolver*	solver;
 	
-	btDiscreteDynamicsWorld*				world;
+	btSoftRigidDynamicsWorld*				world;
 	btRigidBody*							ground;
 	
 protected:
@@ -81,7 +81,7 @@ private:
 	ofVec3f		_cameraPos;
 	bool		_bMouseDown;
 	short int	_mouseFilterMask; // if you don't want to pick certain objects //
-	btRigidBody* _pickedBody;
+	btCollisionObject* _pickedBody;
 	
 	///constraint for mouse picking
 	btTypedConstraint*	_pickConstraint;

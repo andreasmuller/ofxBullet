@@ -9,19 +9,19 @@
 
 #pragma once
 
-#include "ofxBulletBaseShape.h"
+#include "ofxBulletBaseRigidShape.h"
 #include "btShapeHull.h"
 
-class ofxBulletCustomShape : public ofxBulletBaseShape {
+class ofxBulletCustomShape : public ofxBulletBaseRigidShape {
 public:
 	ofxBulletCustomShape();
 	~ofxBulletCustomShape();
 	
 	void init( btCompoundShape* a_colShape, ofVec3f a_centroid );
 	
-	void create( btDiscreteDynamicsWorld* a_world, ofVec3f a_loc=ofVec3f(0,0,0), float a_mass=1.f );
-	void create( btDiscreteDynamicsWorld* a_world, ofVec3f a_loc, ofQuaternion a_rot, float a_mass=1.f );
-	void create( btDiscreteDynamicsWorld* a_world, btTransform a_bt_tr, float a_mass=1.f );
+	void create( btDynamicsWorld* a_world, ofVec3f a_loc=ofVec3f(0,0,0), float a_mass=1.f );
+	void create( btDynamicsWorld* a_world, ofVec3f a_loc, ofQuaternion a_rot, float a_mass=1.f );
+	void create( btDynamicsWorld* a_world, btTransform a_bt_tr, float a_mass=1.f );
 	
 	bool addShape( btCollisionShape* a_colShape, ofVec3f a_localCentroidPos );
 	bool addMesh(ofMesh a_mesh, ofVec3f a_localScaling, bool a_bUseConvexHull);

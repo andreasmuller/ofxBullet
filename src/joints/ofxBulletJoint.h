@@ -12,7 +12,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "ofxBulletConstants.h"
 #include "ofxBulletUtils.h"
-#include "ofxBulletBaseShape.h"
+#include "ofxBulletBaseRigidShape.h"
 
 // creates a btGeneric6DofConstraint joint, free rotation, no constraints //
 class ofxBulletJoint {
@@ -20,8 +20,8 @@ public:
 	ofxBulletJoint();
 	~ofxBulletJoint();
 	
-	void	create( btDiscreteDynamicsWorld* a_world, ofxBulletBaseShape* a_shape1, ofxBulletBaseShape* a_shape2 );
-	void	create( btDiscreteDynamicsWorld* a_world, ofxBulletBaseShape* a_shape, ofVec3f a_pos );
+	void	create( btDiscreteDynamicsWorld* a_world, ofxBulletBaseRigidShape* a_shape1, ofxBulletBaseRigidShape* a_shape2 );
+	void	create( btDiscreteDynamicsWorld* a_world, ofxBulletBaseRigidShape* a_shape, ofVec3f a_pos );
 	
 	/******************************/
 	// call before calling add() //

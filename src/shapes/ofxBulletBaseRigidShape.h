@@ -10,16 +10,17 @@
 #pragma once 
 #include "ofMain.h"
 #include "btBulletDynamicsCommon.h"
+#include "ofxBulletCollisionData.h"
 #include "ofxBulletConstants.h"
 #include "ofxBulletUtils.h"
 #include "ofxBulletUserData.h"
-#include "ofxBulletCollisionData.h"
 #include "ofxBulletMousePickEvent.h"
 
-class ofxBulletBaseShape {
+
+class ofxBulletBaseRigidShape  {
 public:
-	ofxBulletBaseShape();
-	~ofxBulletBaseShape();
+	ofxBulletBaseRigidShape();
+	~ofxBulletBaseRigidShape();
 	
 	enum CollisionFilterGroups {
 		OFX_BULLET_BOX_SHAPE = 1,
@@ -30,7 +31,7 @@ public:
 		OFX_BULLET_CUSTOM_SHAPE = 6
 	};
 	
-	virtual void create( btDiscreteDynamicsWorld* a_world, btCollisionShape* a_colShape, btTransform a_bt_tr, float a_mass );
+	virtual void create( btDynamicsWorld* a_world, btCollisionShape* a_colShape, btTransform a_bt_tr, float a_mass );
 	virtual void add();
 	void	remove();
 	void	removeRigidBody();
@@ -110,7 +111,7 @@ public:
 	*/
 protected:
 	
-	btDiscreteDynamicsWorld*	_world;
+	btDynamicsWorld*	_world;
 	btCollisionShape*			_shape;
 	btRigidBody*				_rigidBody;
 	float						_mass;

@@ -21,7 +21,7 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
 	
-	ofxBulletWorldRigid			world;
+	ofxBulletWorldSoft			world;
 	vector <ofxBulletBox*>		bounds;
 	ofxBulletCustomShape*		boundsShape;
 	ofMaterial					boundsMat;
@@ -30,7 +30,7 @@ public:
 	
 	vector<ofxBulletCustomShape*>	logos;
 	ofMaterial						logoMat;
-	vector<ofxBulletBaseShape*>		shapes;
+	vector<ofxBulletBaseRigidShape*>		shapes;
 	ofMaterial						shapesMat;
 	
 	bool bDrawDebug;
