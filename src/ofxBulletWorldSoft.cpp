@@ -8,6 +8,9 @@
  */
 
 #include "ofxBulletWorldSoft.h"
+#include "BulletSoftBody/btSoftBodySolvers.h"
+
+
 
 //--------------------------------------------------------------
 ofxBulletWorldSoft::ofxBulletWorldSoft() {
@@ -42,13 +45,28 @@ void ofxBulletWorldSoft::setup() {
 		broadphase = new btAxisSweep3 (worldAabbMin, worldAabbMax);
 	}
 	
-	if(collisionConfig == NULL)			collisionConfig = new btDefaultCollisionConfiguration();
+
+	
+	if(collisionConfig == NULL)			collisionConfig = new btSoftBodyRigidBodyCollisionConfiguration();
 	if(dispatcher == NULL)				dispatcher = new btCollisionDispatcher( collisionConfig );
 	if(solver == NULL)					solver = new btSequentialImpulseConstraintSolver;
 	if(world == NULL)					world = new btSoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
+	
+	
+	
+	
 	// default gravity //
 	setGravity(ofVec3f(0.f, 9.8f, 0.f));
 	
+	
+
+	
+	world->getDispatchInfo().m_enableSPU = true;
+	world->getWorldInfo().m_sparsesdf.Initialize();
+	world->getWorldInfo().air_density		=	(btScalar)1.2;
+	world->getWorldInfo().m_sparsesdf.Reset();
+
+
 }
 
 //--------------------------------------------------------------
@@ -276,6 +294,10 @@ bool ofxBulletWorldSoft::checkWorld() {
 void ofxBulletWorldSoft::setGravity( ofVec3f a_g ) {
 	if(!checkWorld()) return;
 	world->setGravity( btVector3(a_g.x, a_g.y, a_g.z) );
+	world->getWorldInfo().m_gravity.setValue(a_g.x, a_g.y, a_g.z);
+	//	clientResetScene();
+	
+
 }
 
 //--------------------------------------------------------------

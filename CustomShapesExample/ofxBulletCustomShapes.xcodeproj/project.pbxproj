@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2D464D3D162F5FD7009D3300 /* ofxBulletBaseSoftShape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D464D3B162F5FD7009D3300 /* ofxBulletBaseSoftShape.cpp */; };
 		2D8BA9EF162F57F50010EE71 /* ofxBulletWorldSoft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D8BA9ED162F57F50010EE71 /* ofxBulletWorldSoft.cpp */; };
 		2E87B1C513CCAEBB00B0D2EE /* ofxBulletCustomShape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2E87B1C413CCAEBB00B0D2EE /* ofxBulletCustomShape.cpp */; };
 		2EA8E56313CB9AEB00D93448 /* ofxBulletJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2EA8E49313CB9AEB00D93448 /* ofxBulletJoint.cpp */; };
@@ -69,8 +70,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2D464D3B162F5FD7009D3300 /* ofxBulletBaseSoftShape.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxBulletBaseSoftShape.cpp; sourceTree = "<group>"; };
+		2D464D3C162F5FD7009D3300 /* ofxBulletBaseSoftShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxBulletBaseSoftShape.h; sourceTree = "<group>"; };
 		2D8BA9ED162F57F50010EE71 /* ofxBulletWorldSoft.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxBulletWorldSoft.cpp; sourceTree = "<group>"; };
 		2D8BA9EE162F57F50010EE71 /* ofxBulletWorldSoft.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxBulletWorldSoft.h; sourceTree = "<group>"; };
+		2DC12ADD16300D2F00A94128 /* Bunny.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Bunny.h; path = shapes/Bunny.h; sourceTree = "<group>"; };
 		2E87B19613CCA1EC00B0D2EE /* ofxBulletRaycastData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxBulletRaycastData.h; sourceTree = "<group>"; };
 		2E87B1C313CCAEBB00B0D2EE /* ofxBulletCustomShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxBulletCustomShape.h; sourceTree = "<group>"; };
 		2E87B1C413CCAEBB00B0D2EE /* ofxBulletCustomShape.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxBulletCustomShape.cpp; sourceTree = "<group>"; };
@@ -172,6 +176,7 @@
 				2EA8E49A13CB9AEB00D93448 /* ofxBulletWorldRigid.h */,
 				2D8BA9ED162F57F50010EE71 /* ofxBulletWorldSoft.cpp */,
 				2D8BA9EE162F57F50010EE71 /* ofxBulletWorldSoft.h */,
+				2DC12ADD16300D2F00A94128 /* Bunny.h */,
 				2EA8E49B13CB9AEB00D93448 /* render */,
 				2EA8E4A013CB9AEB00D93448 /* shapes */,
 			);
@@ -211,6 +216,8 @@
 			children = (
 				2EA8E4A113CB9AEB00D93448 /* ofxBulletBaseRigidShape.cpp */,
 				2EA8E4A213CB9AEB00D93448 /* ofxBulletBaseRigidShape.h */,
+				2D464D3B162F5FD7009D3300 /* ofxBulletBaseSoftShape.cpp */,
+				2D464D3C162F5FD7009D3300 /* ofxBulletBaseSoftShape.h */,
 				2EA8E4A313CB9AEB00D93448 /* ofxBulletBox.cpp */,
 				2EA8E4A413CB9AEB00D93448 /* ofxBulletBox.h */,
 				2EA8E4A513CB9AEB00D93448 /* ofxBulletCapsule.cpp */,
@@ -430,6 +437,7 @@
 				2E87B1C513CCAEBB00B0D2EE /* ofxBulletCustomShape.cpp in Sources */,
 				2EB7CFD313DB7F3E004D3C70 /* ofxAssimpModelLoader.cpp in Sources */,
 				2D8BA9EF162F57F50010EE71 /* ofxBulletWorldSoft.cpp in Sources */,
+				2D464D3D162F5FD7009D3300 /* ofxBulletBaseSoftShape.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -610,8 +618,14 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_7)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_8)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_9)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_10)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_11)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_12)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_APPS_DIR)/OpenFrameworks/of_dev/openFrameworks/addons/ofxBullet/bullet/lib/osx/Debug\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_10 = "\"$(SRCROOT)/../libs/bullet/lib/linux\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_11 = "\"$(SRCROOT)/../libs/bullet/lib/osx/Debug\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_12 = "\"$(SRCROOT)/../libs/bullet/lib/osx/Release\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYSTEM_APPS_DIR)/OpenFrameworks/of_dev/openFrameworks/addons/ofxBullet/bullet/lib/osx/Release\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\"$(SYSTEM_APPS_DIR)/OpenFrameworks/of_dev/openFrameworks/addons/ofxAssimpModelLoader/libs/assimp/lib/android/armeabi\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_4 = "\"$(SYSTEM_APPS_DIR)/OpenFrameworks/of_dev/openFrameworks/addons/ofxAssimpModelLoader/libs/assimp/lib/android/armeabi-v7a\"";
@@ -714,8 +728,14 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_7)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_8)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_9)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_10)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_11)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_12)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_APPS_DIR)/OpenFrameworks/of_dev/openFrameworks/addons/ofxBullet/bullet/lib/osx/Debug\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_10 = "\"$(SRCROOT)/../libs/bullet/lib/linux\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_11 = "\"$(SRCROOT)/../libs/bullet/lib/osx/Debug\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_12 = "\"$(SRCROOT)/../libs/bullet/lib/osx/Release\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYSTEM_APPS_DIR)/OpenFrameworks/of_dev/openFrameworks/addons/ofxBullet/bullet/lib/osx/Release\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\"$(SYSTEM_APPS_DIR)/OpenFrameworks/of_dev/openFrameworks/addons/ofxAssimpModelLoader/libs/assimp/lib/android/armeabi\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_4 = "\"$(SYSTEM_APPS_DIR)/OpenFrameworks/of_dev/openFrameworks/addons/ofxAssimpModelLoader/libs/assimp/lib/android/armeabi-v7a\"";

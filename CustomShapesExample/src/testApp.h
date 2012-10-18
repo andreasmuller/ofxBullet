@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxBullet.h"
 #include "ofxAssimpModelLoader.h"
+#include "ofxBulletBaseSoftShape.h"
 
 class testApp : public ofBaseApp{
 
@@ -31,6 +32,7 @@ public:
 	vector<ofxBulletCustomShape*>	logos;
 	ofMaterial						logoMat;
 	vector<ofxBulletBaseRigidShape*>		shapes;
+	vector<ofxBulletBaseSoftShape*>	softShapes;
 	ofMaterial						shapesMat;
 	
 	bool bDrawDebug;
@@ -39,7 +41,10 @@ public:
 	ofMesh						mesh;
 	ofCamera					camera;
 	ofLight						light;
+	ofLight						keyLight;
+	ofLight						fillLight;
 	
 	ofxAssimpModelLoader		assimpModel;
-		
+	
+	int randSeed;
 };

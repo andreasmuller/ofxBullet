@@ -10,6 +10,7 @@
 #pragma once
 
 #include "btBulletDynamicsCommon.h"
+#include "BulletSoftBody/btSoftBody.h"
 
 static btTransform ofGetBtTransformFromVec3f( ofVec3f a_v ) {
 	btTransform tr;
@@ -28,6 +29,7 @@ static btRigidBody* ofGetBtRigidBodyFromCollisionShape(btCollisionShape* a_cs, b
 	btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI( mass, motionState, a_cs, fallInertia );
 	return new btRigidBody( fallRigidBodyCI );
 }
+
 
 static btRigidBody* ofGetBtRigidBodyFromCollisionShape(btCollisionShape* a_cs, ofVec3f a_loc, float a_mass) {
 	return ofGetBtRigidBodyFromCollisionShape( a_cs, ofGetBtTransformFromVec3f(a_loc), a_mass);

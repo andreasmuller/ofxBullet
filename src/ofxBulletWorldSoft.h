@@ -13,6 +13,7 @@
 #include "ofMain.h"
 #include "btBulletDynamicsCommon.h"
 #include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
+#include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 #include "ofxBulletUtils.h"
 #include "ofxBulletConstants.h"
 #include "ofxBulletCollisionData.h"
@@ -64,7 +65,7 @@ public:
 	void mouseReleased( ofMouseEventArgs &a);
 	
 	btBroadphaseInterface*					broadphase;
-	btDefaultCollisionConfiguration*		collisionConfig;
+	btSoftBodyRigidBodyCollisionConfiguration*		collisionConfig;
 	btCollisionDispatcher*					dispatcher;
 	btSequentialImpulseConstraintSolver*	solver;
 	
@@ -82,7 +83,7 @@ private:
 	bool		_bMouseDown;
 	short int	_mouseFilterMask; // if you don't want to pick certain objects //
 	btCollisionObject* _pickedBody;
-	
+		
 	///constraint for mouse picking
 	btTypedConstraint*	_pickConstraint;
 	float gOldPickingDist;
