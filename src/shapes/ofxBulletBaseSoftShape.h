@@ -28,6 +28,8 @@ public:
 		OFX_BULLET_CUSTOM_SHAPE = 6
 	};
 	
+	/// tetrahedron version
+	virtual void create( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr, float a_mass, float scale );
 	virtual void create( btSoftRigidDynamicsWorld* a_world, const ofMesh& a_mesh, btTransform a_bt_tr, float a_mass, float scale );
 	virtual void add();
 	void	remove();

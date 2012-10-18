@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxBullet.h"
 #include "ofxAssimpModelLoader.h"
+#include "ofxBulletBaseSoftShape.h"
 
 class testApp : public ofBaseApp{
 
@@ -21,7 +22,7 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
 	
-	ofxBulletWorldRigid			world;
+	ofxBulletWorldSoft			world;
 	vector <ofxBulletBox*>		bounds;
 	ofxBulletCustomShape*		boundsShape;
 	ofMaterial					boundsMat;
@@ -30,16 +31,22 @@ public:
 	
 	vector<ofxBulletCustomShape*>	logos;
 	ofMaterial						logoMat;
-	vector<ofxBulletBaseShape*>		shapes;
+	vector<ofxBulletBaseRigidShape*>		shapes;
+	vector<ofxBulletBaseSoftShape*>	softShapes;
 	ofMaterial						shapesMat;
 	
 	bool bDrawDebug;
 	
 	
-	ofMesh						mesh;
+	ofMesh						logoMesh;
+	ofMesh						ringMesh;
 	ofCamera					camera;
 	ofLight						light;
+	ofLight						keyLight;
+	ofLight						fillLight;
 	
 	ofxAssimpModelLoader		assimpModel;
-		
+	ofxAssimpModelLoader		ringModel;
+	
+	int randSeed;
 };

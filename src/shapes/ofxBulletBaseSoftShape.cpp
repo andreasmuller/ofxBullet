@@ -26,6 +26,23 @@ ofxBulletBaseSoftShape::~ofxBulletBaseSoftShape() {
 	remove();
 }
 
+void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr, float a_mass, float scale ) {
+	
+	bool makeFaceLinks = false;
+	bool makeTetraLinks = true;
+	bool makeFacesFromTetras = true;
+	_softBody = btSoftBodyHelpers::CreateFromTetGenData( a_world->getWorldInfo(), eleFile.getBinaryBuffer(), faceFile.getBinaryBuffer(), 
+														nodeFile.getBinaryBuffer(),  
+														makeFaceLinks, makeTetraLinks, makeFacesFromTetras );
+	
+	_softBody->m_cfg.collisions	=	btSoftBody::fCollision::CL_SS+	btSoftBody::fCollision::CL_RS;
+
+	
+	_softBody->setVolumeMass( a_mass );
+
+}
+
+
 void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, const ofMesh& mesh, btTransform a_bt_tr, float a_mass, float scale ){
 	
 	if ( mesh.getMode() != OF_PRIMITIVE_TRIANGLES ) {
@@ -34,7 +51,7 @@ void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, const of
 	}
 
 	if(a_world == NULL) {
-		ofLog(OF_LOG_ERROR, "ofxBulletSphere :: create : a_world param is NULL");
+		ofLog(OF_LOG_ERROR, "ofxBulletBaseSoftShape :: create : a_world param is NULL");
 		return;
 	}
 	_mass			= a_mass;
@@ -42,76 +59,28 @@ void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, const of
 	
 	_bCreated		= true;
 	
-	
-	// convert ofMesh to vertices/triangles list
-	vector<ofVec3f> vertices;
-	// fuse close-enough vertices
-	// first define 'close enough' as 1/10000 of smallest dimension of the mesh
-	ofVec3f tlb, brf; // top left back, bottom right front
-	for ( int i=0; i<mesh.getNumVertices(); i++ ) {
-
-		ofVec3f vertex = mesh.getVertex(i);
-		if ( i == 0 ){
-			tlb = brf = vertex;
-			continue;
-		}
-
-		tlb.x = min(tlb.x,vertex.x);
-		tlb.y = min(tlb.y,vertex.y);
-		tlb.z = min(tlb.z,vertex.z);
-		brf.x = min(brf.x,vertex.x);
-		brf.y = min(brf.y,vertex.y);
-		brf.z = min(brf.z,vertex.z);
+	 
+	vector<ofVec3f> vertices = mesh.getVertices();
+	// scale the vertices
+	for ( int i=0; i<vertices.size(); i++ ){
+		vertices[i] *= scale;
 	}
-	float minDimension = min(brf.x-tlb.x,min(brf.y-tlb.y, brf.z-tlb.z));
-	float fuseDistanceSq = minDimension * 0.0001f * scale;
-	fuseDistanceSq *= fuseDistanceSq;
-	// now fuse
-	map<int,int> fused;
-	for ( int i=0; i<mesh.getNumVertices(); i++ )
-	{
-		ofVec3f vertex = mesh.getVertex(i);
-		vertex *= scale;
-		//vertex.rotate(10, 10, 10);
-		bool didFuse = false;
-		for ( int j=0; j<vertices.size(); j++ ){
-			if ( (vertex-vertices[j]).lengthSquared()<fuseDistanceSq ){
-				// fuse i to j
-				fused[i] = j;
-				didFuse = true;
-				break;
-			}
-		}
-		if ( !didFuse ) {
-			vertices.push_back( vertex );
-			fused[i] = i;
-		}
-	}
-	
-	// we have fused all vertices together, and now the fused map maps from old indices to fuse targets
 	vector<int> triangles;
-	triangles.resize( mesh.getNumVertices() );
-	for ( int i=0; i<mesh.getNumVertices(); i++ )
-	{
-		// normally triangles would just be ((1,2,3),(4,5,6),(7,8,9),...)
-		// but we have fused vertices, so instead of 1,2,3 lookup fused[1],fused[2],fused[3] etc
-		triangles.push_back( fused[i] );
-	}
+	for ( int i=0; i<mesh.getNumIndices(); i++ )
+		triangles.push_back( mesh.getIndex(i) );
 	
 	int numTriangles = triangles.size()/3;
-	/*_softBody		= btSoftBodyHelpers::CreateFromTriMesh( a_world->getWorldInfo(), &(vertices[0].x), &triangles[0], numTriangles );*/
+	_softBody		= btSoftBodyHelpers::CreateFromTriMesh( a_world->getWorldInfo(), &(vertices[0].x), &triangles[0], numTriangles );
 	
-	_softBody = btSoftBodyHelpers::CreateFromTriMesh( a_world->getWorldInfo(), gVerticesBunny,
-													 &gIndicesBunny[0][0],
-													 BUNNY_NUM_TRIANGLES);
-	_softBody->scale( btVector3(5, 5, 5));
+	//_softBody = btSoftBodyHelpers::CreateFromTriMesh( a_world->getWorldInfo(), gVerticesBunny,&gIndicesBunny[0][0], BUNNY_NUM_TRIANGLES);
+	//_softBody->scale( btVector3(scale, scale, scale));
 	setProperties(.4, .75);
 	
-	_softBody->generateBendingConstraints(2);
+	_softBody->generateBendingConstraints(3);
 	//_softBody->generateClusters(0);
 	_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
 	_softBody->m_cfg.kCHR = 0.8; // penetration
-	_softBody->m_cfg.kPR = 0.5f; // pressure
+	_softBody->m_cfg.kPR = 1.0f; // pressure
 	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
 	_softBody->m_cfg.collisions|=btSoftBody::fCollision::VF_SS;
 //	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
@@ -120,7 +89,7 @@ void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, const of
 	_softBody->m_cfg.kDF			=	0.5;
 	_softBody->m_cfg.collisions|=btSoftBody::fCollision::CL_SS;*/
 	_softBody->transform(a_bt_tr);
-	_softBody->setTotalMass(a_mass,true);
+	_softBody->setTotalMass(a_mass,false);
 
 	_softBody->randomizeConstraints();
 /*	btMatrix3x3	m;
@@ -467,7 +436,7 @@ void ofxBulletBaseSoftShape::draw(){
 		mesh.addTriangle( vertIndex, vertIndex+1, vertIndex+2 );
 	}
 	mesh.drawFaces();
-	
+		
 	/*
 	for(int i=0;i<_softBody->m_links.size();++i)
 	{

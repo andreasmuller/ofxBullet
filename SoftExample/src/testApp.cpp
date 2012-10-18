@@ -9,7 +9,7 @@ void testApp::setup() {
 	camera.setPosition(ofVec3f(0, -3.f, -40.f));
 	camera.lookAt(ofVec3f(0, 0, 0), ofVec3f(0, -1, 0));
 	
-	camera.cacheMatrices(true);
+	//camera.cacheMatrices(true);
 	
 	world.setup();
 	world.enableGrabbing();
@@ -61,12 +61,31 @@ void testApp::setup() {
 	ofVec3f scale(.0009, .0009, .0009);
 	
 	// 3D logo by Lauren Licherdell | http://www.laurenlicherdell.com/ // 
-	assimpModel.loadModel("OFlogo.dae", true);
+	assimpModel.loadModel("OFlogo.dae", false);
 	assimpModel.setScale(scale.x, scale.y, scale.z);
 	assimpModel.setPosition(0, 0, 0);
+	logoMesh = assimpModel.getMesh(0);
+
+	float ringScale = 5;
+	ringModel.loadModel("ring.dae", true );
+	ringModel.setPosition(0,0,0);
+	ringMesh = ringModel.getMesh(0);
+	float ringMass = 0.3f;
+	
+	//randSeed = ofGetSeconds();
+	randSeed = 30;
+	ofSeedRandom(randSeed);
 	
 	ofQuaternion startRot = ofQuaternion(1., 0., 0., PI);
 	
+	// let's make an object for the light to follow //
+	shapes.push_back( new ofxBulletSphere() );
+	((ofxBulletSphere*)shapes[0])->create(world.world, ofVec3f(0, -hwidth+5, -5), .15f, 2.);
+	((ofxBulletSphere*)shapes[0])->setSphereResolution( 10 );
+	((ofxBulletSphere*)shapes[0])->setActivationState( DISABLE_DEACTIVATION );
+	shapes[0]->add();
+	
+
 	for (int i = 0; i < 3; i++) {
 		logos.push_back( new ofxBulletCustomShape() );
 		startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
@@ -82,17 +101,51 @@ void testApp::setup() {
 		logos[i]->add();
 	}
 	
-	// let's make an object for the light to follow //
-	shapes.push_back( new ofxBulletSphere() );
-	((ofxBulletSphere*)shapes[0])->create(world.world, ofVec3f(0, -hwidth+5, -5), .15f, 2.);
-	((ofxBulletSphere*)shapes[0])->setSphereResolution( 10 );
-	((ofxBulletSphere*)shapes[0])->setActivationState( DISABLE_DEACTIVATION );
-	shapes[0]->add();
+	for ( int i=0; i<3; i++ )
+	{
+		shapes.push_back( new ofxBulletCapsule() );
+		startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
+
+		float mass = 1.0f;
+		float radius = 1.f;
+		float height = 2.f;
+		((ofxBulletCapsule*)shapes.back())->create( world.world, startLoc, mass, radius, height );
+		((ofxBulletCapsule*)shapes.back())->setActivationState( DISABLE_DEACTIVATION );
+		shapes.back()->add();
+	}
+	
+	for ( int i=0; i<1; i++ )
+	{
+		startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
+
+		softShapes.push_back( new ofxBulletBaseSoftShape() );
+		//startLoc.x += 0.01f;
+		softShapes.back()->create( world.world, ringMesh, ofGetBtTransformFromVec3f(startLoc), ringMass, ringScale );
+		softShapes.back()->add();
+	}
 	
 	ofSetSmoothLighting(true);
+	float lightScale = 0.1f;
 	light.setAmbientColor(ofColor(.0, .0, .0));
-	light.setDiffuseColor(ofColor(.0, .0, .0));
-	light.setSpecularColor(ofColor(255, .1, .1));
+	light.setDiffuseColor(ofColor(128*lightScale, 128*lightScale, 128*lightScale));
+	light.setSpecularColor(ofColor(192*lightScale, 180*lightScale, 180*lightScale ));
+	light.setAttenuation(0, 0.5, 0);
+	
+	float keyScale = 0.5f;
+	keyLight.setPosition( -15, -10, -40 );
+	keyLight.setAmbientColor(ofColor(.0, .0, .0));
+	keyLight.setDiffuseColor(ofColor(192*keyScale, 192*keyScale, 128*keyScale));
+	keyLight.setSpecularColor(ofColor(192*keyScale, 180*keyScale, 180*keyScale ));
+	//	keyLight.setAttenuation(0,1,0);
+	
+	float fillScale = 0.3f;
+	fillLight.setPosition( 15, 20, -40 );
+	fillLight.setAmbientColor(ofColor(.0, .0, .0));
+	fillLight.setDiffuseColor(ofColor(192*fillScale, 128*fillScale, 128*fillScale));
+	fillLight.setSpecularColor(ofColor(192*fillScale, 180*fillScale, 180*fillScale ));
+	//	keyLight.setAttenuation(0,1,0);
+	
+	
 	
 	logoMat.setAmbientColor(ofFloatColor(0, 0, 0));
 	logoMat.setDiffuseColor(ofFloatColor(150, 0, 150));
@@ -140,6 +193,8 @@ void testApp::draw() {
 	
 	ofEnableLighting();
 	light.enable();
+	keyLight.enable();
+	//fillLight.enable();
 	light.setPosition(shapes[0]->getPosition());
 	ofSetColor(255, 255, 255);
 	shapes[0]->draw();
@@ -172,7 +227,7 @@ void testApp::draw() {
     glDisable(GL_CULL_FACE);
 	ofPoint scale		= assimpModel.getScale();
 	
-	ofSetColor(0, 0, 0);
+	ofSetColor(0, 0.5, 0);
 	logoMat.begin();
 	for(int i = 0; i < logos.size(); i++) {
 		btScalar	m[16];
@@ -181,11 +236,21 @@ void testApp::draw() {
 		glMultMatrixf( m );
 		glTranslatef(-logos[i]->getCentroid().x, -logos[i]->getCentroid().y, -logos[i]->getCentroid().z);
 		ofScale(scale.x,scale.y,scale.z);
-		assimpModel.getMesh(0).drawFaces();
+		logoMesh.drawFaces();
 		glPopMatrix();
 	}
-	glPopAttrib();
 	logoMat.end();
+
+	ofMaterial softMat;
+	softMat.setColors( ofColor::gray, ofColor(16, 16, 16), ofColor::white, ofColor::black);
+	softMat.setShininess( 0.2f );
+	softMat.begin();
+	
+	for(int i = 0; i < softShapes.size(); i++) {
+		softShapes[i]->draw();
+	}
+	softMat.end();
+	glPopAttrib();
 	
 	ofSetColor(15,197,138);
 	ofPushStyle();
@@ -205,6 +270,7 @@ void testApp::draw() {
 	int totalShapes = shapes.size() + logos.size();
 	ofVec3f gravity = world.getGravity();
 	stringstream ss;
+	ss << "seed :" << randSeed << endl;
 	ss << "Draw Debug (d): " << bDrawDebug << endl;
 	ss << "Total Shapes: " << totalShapes << endl;
 	ss << "Add logos(o)" << endl;
