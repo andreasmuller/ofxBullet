@@ -1,5 +1,7 @@
 #include "testApp.h"
 
+#include "MeshHelper.h"
+
 //--------------------------------------------------------------
 void testApp::setup() {
 	ofSetFrameRate(60);
@@ -67,10 +69,15 @@ void testApp::setup() {
 	logoMesh = assimpModel.getMesh(0);
 
 	float ringScale = 5;
-	ringModel.loadModel("ring.dae", true );
+	ringModel.loadModel("blob.dae", false );
 	ringModel.setPosition(0,0,0);
 	ringMesh = ringModel.getMesh(0);
-	float ringMass = 0.3f;
+	ofMesh ringMesh_base = ringModel.getMesh(1);
+	MeshHelper::fuseNeighbours( ringMesh );
+	MeshHelper::fuseNeighbours( ringMesh_base );
+	MeshHelper::appendMesh( ringMesh, ringMesh_base, true );
+	
+	float ringMass = 3.f;
 	
 	ofQuaternion startRot = ofQuaternion(1., 0., 0., PI);
 	
@@ -112,19 +119,19 @@ void testApp::setup() {
 	
 	for ( int i=0; i<1; i++ )
 	{
+		softShapes.push_back( new ofxBulletBaseSoftShape() );
+
 		startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
 		
-		ofBuffer faceFile = ofBufferFromFile( "ring-nosubdiv.2.face" );
-		ofBuffer nodeFile = ofBufferFromFile( "ring-nosubdiv.2.node" );
-		ofBuffer eleFile = ofBufferFromFile( "ring-nosubdiv.2.ele" );
+		/*
+		ofBuffer faceFile = ofBufferFromFile( "blob.1.face" );
+		ofBuffer nodeFile = ofBufferFromFile( "blob.1.node" );
+		ofBuffer eleFile = ofBufferFromFile( "blob.1.ele" );
 		float tetraMass = 0.3f;
 		float tetraScale = 5;
+		softShapes.back()->create( world.world, eleFile, faceFile, nodeFile, ofGetBtTransformFromVec3f(startLoc), tetraMass, tetraScale );*/
 
-		softShapes.push_back( new ofxBulletBaseSoftShape() );
-		//startLoc.x += 0.01f;
-		//softShapes.back()->create( world.world, ringMesh, ofGetBtTransformFromVec3f(startLoc), ringMass, ringScale );
-		softShapes.back()->create( world.world, eleFile, faceFile, nodeFile, ofGetBtTransformFromVec3f(startLoc), tetraMass, tetraScale );
-		softShapes.back()->setActivationState( DISABLE_DEACTIVATION );
+		softShapes.back()->create( world.world, ringMesh, ofGetBtTransformFromVec3f(startLoc), ringMass, ringScale );
 		softShapes.back()->add();
 	}
 	

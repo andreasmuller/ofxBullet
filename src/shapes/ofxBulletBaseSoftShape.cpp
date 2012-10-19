@@ -100,22 +100,18 @@ void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, const of
 	
 	 
 	vector<ofVec3f> vertices = mesh.getVertices();
-	// scale the vertices
-	for ( int i=0; i<vertices.size(); i++ ){
-		vertices[i] *= scale;
-	}
+
+	
 	vector<int> triangles;
 	for ( int i=0; i<mesh.getNumIndices(); i++ )
 		triangles.push_back( mesh.getIndex(i) );
 	
 	int numTriangles = triangles.size()/3;
 	_softBody		= btSoftBodyHelpers::CreateFromTriMesh( a_world->getWorldInfo(), &(vertices[0].x), &triangles[0], numTriangles );
-	
-	//_softBody = btSoftBodyHelpers::CreateFromTriMesh( a_world->getWorldInfo(), gVerticesBunny,&gIndicesBunny[0][0], BUNNY_NUM_TRIANGLES);
-	//_softBody->scale( btVector3(scale, scale, scale));
+	_softBody->scale( btVector3(scale, scale, scale));
 	setProperties(.4, .75);
 	
-	_softBody->generateBendingConstraints(3);
+	_softBody->generateBendingConstraints(2);
 	//_softBody->generateClusters(0);
 	_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
 	_softBody->m_cfg.kCHR = 0.8; // penetration
@@ -129,7 +125,7 @@ void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, const of
 	_softBody->m_cfg.collisions|=btSoftBody::fCollision::CL_SS;*/
 	_softBody->transform(a_bt_tr);
 	_softBody->setTotalMass(a_mass,false);
-
+	
 	_softBody->randomizeConstraints();
 /*	btMatrix3x3	m;
 	m.setEulerZYX(a.x(),a.y(),a.z());
