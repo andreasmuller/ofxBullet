@@ -17,5 +17,8 @@ public:
 	static void fuseNeighbours( ofMesh& mesh, float fuseDistance = -1 );
 	static void fuseNeighbours( ofMesh& outputMesh, const ofMesh& sourceMesh, float fuseDistance=-1 );
 	static void appendMesh( ofMesh& targetMesh, const ofMesh& toAppend, bool fuse=true );
+	
+	static void scaleMesh( ofMesh& mesh, float scale );
+	static void rotateMesh( ofMesh& mesh, float angle, ofVec3f axis );
 };
 

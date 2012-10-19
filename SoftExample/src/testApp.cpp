@@ -71,11 +71,17 @@ void testApp::setup() {
 	float ringScale = 5;
 	ringModel.loadModel("blob.dae", false );
 	ringModel.setPosition(0,0,0);
-	ringMesh = ringModel.getMesh(0);
-	ofMesh ringMesh_base = ringModel.getMesh(1);
+	ringMesh = ringModel.getMesh(1);
+	ofMesh ringMesh_wobbly = ringModel.getMesh(0);
+	MeshHelper::scaleMesh( ringMesh, ringScale );
+	MeshHelper::scaleMesh( ringMesh_wobbly, ringScale );
+	// don't need to scale any more
+	ringScale = 1;
+	
 	MeshHelper::fuseNeighbours( ringMesh );
-	MeshHelper::fuseNeighbours( ringMesh_base );
-	MeshHelper::appendMesh( ringMesh, ringMesh_base, true );
+	MeshHelper::fuseNeighbours( ringMesh_wobbly );
+	ringMesh_attachIndexEnd = ringMesh.getNumVertices();
+	MeshHelper::appendMesh( ringMesh, ringMesh_wobbly, true );
 	
 	float ringMass = 3.f;
 	
@@ -121,7 +127,8 @@ void testApp::setup() {
 	{
 		softShapes.push_back( new ofxBulletBaseSoftShape() );
 
-		startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
+		//startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
+		startLoc = ofVec3f(0,0,0);
 		
 		/*
 		ofBuffer faceFile = ofBufferFromFile( "blob.1.face" );
@@ -187,8 +194,12 @@ void testApp::update() {
 		diff *= 200.f;
 		boundsShape->applyCentralForce(diff);
 	}
+
+	// force the base vertices of the blob shape back to original positions
 	
 	world.update();
+	
+	
 	ofSetWindowTitle(ofToString(ofGetFrameRate(), 0));
 	
 }
@@ -262,6 +273,8 @@ void testApp::draw() {
 	}
 	softMat.end();
 	glPopAttrib();
+	
+	ringMesh.draw();
 	
 	ofSetColor(15,197,138);
 	ofPushStyle();

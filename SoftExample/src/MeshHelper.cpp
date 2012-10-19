@@ -163,3 +163,16 @@ void MeshHelper::appendMesh( ofMesh& targetMesh, const ofMesh& toAppend, bool fu
 	if ( fuse )
 		fuseNeighbours(targetMesh);
 }
+
+
+void MeshHelper::scaleMesh( ofMesh& mesh, float scale )
+{
+	for ( int i=0; i<mesh.getNumVertices(); i++ )
+		mesh.getVertices()[i] *= scale;
+}
+
+void MeshHelper::rotateMesh( ofMesh& mesh, float angle, ofVec3f axis )
+{
+	for ( int i=0; i<mesh.getNumVertices(); i++ )
+		mesh.getVertices()[i].rotate( angle, axis );
+}

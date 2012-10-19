@@ -40,6 +40,7 @@ public:
 	
 	ofMesh						logoMesh;
 	ofMesh						ringMesh;
+	ofIndexType					ringMesh_attachIndexEnd;
 	ofCamera					camera;
 	ofLight						light;
 	ofLight						keyLight;
