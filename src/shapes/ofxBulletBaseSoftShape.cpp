@@ -26,19 +26,58 @@ ofxBulletBaseSoftShape::~ofxBulletBaseSoftShape() {
 	remove();
 }
 
+
 void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr, float a_mass, float scale ) {
 	
-	bool makeFaceLinks = false;
+	_mass = a_mass;
+	_world = a_world;
+
+	bool makeFaceLinks = true;
 	bool makeTetraLinks = true;
-	bool makeFacesFromTetras = true;
-	_softBody = btSoftBodyHelpers::CreateFromTetGenData( a_world->getWorldInfo(), eleFile.getBinaryBuffer(), faceFile.getBinaryBuffer(), 
+	bool makeFacesFromTetras = false; // has no effect anyway
+	_softBody = btSoftBodyHelpers::CreateFromTetGenData( a_world->getWorldInfo(), eleFile.getBinaryBuffer(), faceFile.getBinaryBuffer(),
 														nodeFile.getBinaryBuffer(),  
 														makeFaceLinks, makeTetraLinks, makeFacesFromTetras );
+//	_softBody = btSoftBodyHelpers::CreateFromTetGenData( a_world->getWorldInfo(), TetraBunny::getElements(), 0, TetraBunny::getNodes(), false, true, true );
 	
-	_softBody->m_cfg.collisions	=	btSoftBody::fCollision::CL_SS+	btSoftBody::fCollision::CL_RS;
+	// ok, it seems we have to manually add faces
+	stringstream ss( faceFile.getBinaryBuffer() );
+	int numFaces;
+	ss >> numFaces;
+	int hasBounds;
+	ss >> hasBounds;
+	for ( int i=0; i<numFaces; i++ ) {
+		int faceIndex, n0, n1, n2;
+		ss >> faceIndex;
+		ss >> n0;
+		ss >> n1;
+		ss >> n2;
+		ofLogNotice("ofxBullBaseSoftShape") << faceIndex << " " << n0 << " " << n1 << " " << n2;
+		_softBody->appendFace(n2, n1, n0);
+		if ( makeFaceLinks ) {
+			_softBody->appendLink( n0, n1, 0, true );
+			_softBody->appendLink( n1, n2, 0, true );
+			_softBody->appendLink( n2, n0, 0, true );
+		}
+	}
+	
+	_softBody->scale( btVector3(scale, scale, scale) );
+	
+	_bCreated = true;
+	//_softBody->m_cfg.collisions	=	btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS;
+
+	_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
+	//_softBody->m_cfg.piterations = 2;
+	_softBody->setVolumeMass( a_mass );
+	_softBody->generateBendingConstraints(3);
+	_softBody->generateClusters(0);
+	
+	_softBody->transform( a_bt_tr );
+	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
+	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
 
 	
-	_softBody->setVolumeMass( a_mass );
+	setProperties(.4, .75);
 
 }
 
@@ -436,8 +475,16 @@ void ofxBulletBaseSoftShape::draw(){
 		mesh.addTriangle( vertIndex, vertIndex+1, vertIndex+2 );
 	}
 	mesh.drawFaces();
-		
+	
 	/*
+	mesh.clear();
+	for ( int i=0; i<_softBody->m_nodes.size();++i )
+	{
+		const btSoftBody::Node& n = _softBody->m_nodes[i];
+		mesh.addVertex( ofVec3f( n.m_x.getX(), n.m_x.getY(), n.m_x.getZ() ) );
+	}
+	mesh.drawVertices();
+		
 	for(int i=0;i<_softBody->m_links.size();++i)
 	{
 		const btSoftBody::Link&	l=_softBody->m_links[i];

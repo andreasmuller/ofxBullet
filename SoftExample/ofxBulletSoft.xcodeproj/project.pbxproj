@@ -75,6 +75,7 @@
 		2D8BA9ED162F57F50010EE71 /* ofxBulletWorldSoft.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxBulletWorldSoft.cpp; sourceTree = "<group>"; };
 		2D8BA9EE162F57F50010EE71 /* ofxBulletWorldSoft.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxBulletWorldSoft.h; sourceTree = "<group>"; };
 		2DC12ADD16300D2F00A94128 /* Bunny.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Bunny.h; path = shapes/Bunny.h; sourceTree = "<group>"; };
+		2DD8A781163068D400E3615F /* bunny.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bunny.inl; sourceTree = "<group>"; };
 		2E87B19613CCA1EC00B0D2EE /* ofxBulletRaycastData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxBulletRaycastData.h; sourceTree = "<group>"; };
 		2E87B1C313CCAEBB00B0D2EE /* ofxBulletCustomShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxBulletCustomShape.h; sourceTree = "<group>"; };
 		2E87B1C413CCAEBB00B0D2EE /* ofxBulletCustomShape.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxBulletCustomShape.cpp; sourceTree = "<group>"; };
@@ -166,6 +167,7 @@
 		2EA8E48E13CB9AEB00D93448 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				2DD8A781163068D400E3615F /* bunny.inl */,
 				2EA8E48F13CB9AEB00D93448 /* events */,
 				2EA8E49213CB9AEB00D93448 /* joints */,
 				2EA8E49513CB9AEB00D93448 /* ofxBullet.h */,
@@ -342,9 +344,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E4B69B5A0A3A1756003C02F2 /* ofxBulletCustomShapes */ = {
+		E4B69B5A0A3A1756003C02F2 /* ofxBulletSoft */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E4B69B5F0A3A1757003C02F2 /* Build configuration list for PBXNativeTarget "ofxBulletCustomShapes" */;
+			buildConfigurationList = E4B69B5F0A3A1757003C02F2 /* Build configuration list for PBXNativeTarget "ofxBulletSoft" */;
 			buildPhases = (
 				E4B69B580A3A1756003C02F2 /* Sources */,
 				E4B69B590A3A1756003C02F2 /* Frameworks */,
@@ -356,7 +358,7 @@
 			dependencies = (
 				E4EEB9AC138B136A00A80321 /* PBXTargetDependency */,
 			);
-			name = ofxBulletCustomShapes;
+			name = ofxBulletSoft;
 			productName = myOFApp;
 			productReference = E4B69B5B0A3A1756003C02F2 /* ofxBulletCustomShapesDebug.app */;
 			productType = "com.apple.product-type.application";
@@ -387,7 +389,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				E4B69B5A0A3A1756003C02F2 /* ofxBulletCustomShapes */,
+				E4B69B5A0A3A1756003C02F2 /* ofxBulletSoft */,
 			);
 		};
 /* End PBXProject section */
@@ -764,7 +766,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E4B69B5F0A3A1757003C02F2 /* Build configuration list for PBXNativeTarget "ofxBulletCustomShapes" */ = {
+		E4B69B5F0A3A1757003C02F2 /* Build configuration list for PBXNativeTarget "ofxBulletSoft" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E4B69B600A3A1757003C02F2 /* Debug */,

@@ -72,10 +72,6 @@ void testApp::setup() {
 	ringMesh = ringModel.getMesh(0);
 	float ringMass = 0.3f;
 	
-	//randSeed = ofGetSeconds();
-	randSeed = 30;
-	ofSeedRandom(randSeed);
-	
 	ofQuaternion startRot = ofQuaternion(1., 0., 0., PI);
 	
 	// let's make an object for the light to follow //
@@ -85,8 +81,8 @@ void testApp::setup() {
 	((ofxBulletSphere*)shapes[0])->setActivationState( DISABLE_DEACTIVATION );
 	shapes[0]->add();
 	
-
-	for (int i = 0; i < 3; i++) {
+	
+	for (int i = 0; i < 0; i++) {
 		logos.push_back( new ofxBulletCustomShape() );
 		startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
 		
@@ -101,7 +97,7 @@ void testApp::setup() {
 		logos[i]->add();
 	}
 	
-	for ( int i=0; i<3; i++ )
+	for ( int i=0; i<0; i++ )
 	{
 		shapes.push_back( new ofxBulletCapsule() );
 		startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
@@ -117,10 +113,18 @@ void testApp::setup() {
 	for ( int i=0; i<1; i++ )
 	{
 		startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
+		
+		ofBuffer faceFile = ofBufferFromFile( "ring-nosubdiv.2.face" );
+		ofBuffer nodeFile = ofBufferFromFile( "ring-nosubdiv.2.node" );
+		ofBuffer eleFile = ofBufferFromFile( "ring-nosubdiv.2.ele" );
+		float tetraMass = 0.3f;
+		float tetraScale = 5;
 
 		softShapes.push_back( new ofxBulletBaseSoftShape() );
 		//startLoc.x += 0.01f;
-		softShapes.back()->create( world.world, ringMesh, ofGetBtTransformFromVec3f(startLoc), ringMass, ringScale );
+		//softShapes.back()->create( world.world, ringMesh, ofGetBtTransformFromVec3f(startLoc), ringMass, ringScale );
+		softShapes.back()->create( world.world, eleFile, faceFile, nodeFile, ofGetBtTransformFromVec3f(startLoc), tetraMass, tetraScale );
+		softShapes.back()->setActivationState( DISABLE_DEACTIVATION );
 		softShapes.back()->add();
 	}
 	
