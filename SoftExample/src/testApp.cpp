@@ -68,22 +68,22 @@ void testApp::setup() {
 	assimpModel.setPosition(0, 0, 0);
 	logoMesh = assimpModel.getMesh(0);
 
-	float ringScale = 5;
-	ringModel.loadModel("blob.dae", false );
-	ringModel.setPosition(0,0,0);
-	ringMesh = ringModel.getMesh(1);
-	ofMesh ringMesh_wobbly = ringModel.getMesh(0);
-	MeshHelper::scaleMesh( ringMesh, ringScale );
-	MeshHelper::scaleMesh( ringMesh_wobbly, ringScale );
+	float blobScale = 5;
+	blobModel.loadModel("blob.dae", false );
+	blobModel.setPosition(0,0,0);
+	blobMesh = blobModel.getMesh(1);
+	ofMesh blobMesh_wobbly = blobModel.getMesh(0);
+	MeshHelper::scaleMesh( blobMesh, blobScale );
+	MeshHelper::scaleMesh( blobMesh_wobbly, blobScale );
 	// don't need to scale any more
-	ringScale = 1;
+	blobScale = 1;
 	
-	MeshHelper::fuseNeighbours( ringMesh );
-	MeshHelper::fuseNeighbours( ringMesh_wobbly );
-	ringMesh_attachIndexEnd = ringMesh.getNumVertices();
-	MeshHelper::appendMesh( ringMesh, ringMesh_wobbly, true );
+	MeshHelper::fuseNeighbours( blobMesh );
+	MeshHelper::fuseNeighbours( blobMesh_wobbly );
+	blobMesh_attachIndexEnd = blobMesh.getNumVertices();
+	MeshHelper::appendMesh( blobMesh, blobMesh_wobbly, true );
 	
-	float ringMass = 3.f;
+	float blobMass = 3.f;
 	
 	ofQuaternion startRot = ofQuaternion(1., 0., 0., PI);
 	
@@ -136,10 +136,14 @@ void testApp::setup() {
 		ofBuffer eleFile = ofBufferFromFile( "blob.1.ele" );
 		float tetraMass = 0.3f;
 		float tetraScale = 5;
-		softShapes.back()->create( world.world, eleFile, faceFile, nodeFile, ofGetBtTransformFromVec3f(startLoc), tetraMass, tetraScale );*/
+		softShapes.back()->createFromTetraBuffer( world.world, eleFile, faceFile, nodeFile, ofGetBtTransformFromVec3f(startLoc), tetraMass, tetraScale );*/
 
-		softShapes.back()->create( world.world, ringMesh, ofGetBtTransformFromVec3f(startLoc), ringMass, ringScale );
+		softShapes.back()->createFromOfMesh( world.world, blobMesh, ofGetBtTransformFromVec3f(startLoc), blobMass, blobScale );
+		softShapes.back()->setPressure( 0.1f );
+		softShapes.back()->setDamping( 0.05f );
+
 		softShapes.back()->add();
+		blobShape = softShapes.back();
 	}
 	
 	ofSetSmoothLighting(true);
@@ -196,6 +200,14 @@ void testApp::update() {
 	}
 
 	// force the base vertices of the blob shape back to original positions
+	for ( int i=0; i<blobMesh_attachIndexEnd; i++ ) {
+		int nodeIndex = i;
+		ofVec3f position = blobMesh.getVertex(nodeIndex);
+		position.rotate( blobRotX, blobRotY, blobRotZ );
+		position.x += ofMap( mouseX, 0, ofGetWidth(), -5, 5 );
+		position.y += ofMap( mouseY, 0, ofGetWidth(), -5, 5 );
+		blobShape->moveNode( nodeIndex, position, 1.0f/60.0f );
+	}
 	
 	world.update();
 	
@@ -274,7 +286,7 @@ void testApp::draw() {
 	softMat.end();
 	glPopAttrib();
 	
-	ringMesh.draw();
+	//blobMesh.draw();
 	
 	ofSetColor(15,197,138);
 	ofPushStyle();
@@ -353,6 +365,25 @@ void testApp::keyPressed(int key) {
 		case OF_KEY_LEFT:
 			gravity.x -= 5.;
 			world.setGravity( gravity );
+			break;
+			
+		case 'r':
+			blobRotX += 5;
+			break;
+		case 'R':
+			blobRotX -= 5;
+			break;
+		case 'q':
+			blobRotY += 5;
+			break;
+		case 'Q':
+			blobRotY -= 5;
+			break;
+		case 'p':
+			blobRotZ += 5;
+			break;
+		case 'P':
+			blobRotZ -= 5;
 			break;
 		default:
 			break;

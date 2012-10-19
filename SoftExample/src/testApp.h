@@ -33,21 +33,22 @@ public:
 	ofMaterial						logoMat;
 	vector<ofxBulletBaseRigidShape*>		shapes;
 	vector<ofxBulletBaseSoftShape*>	softShapes;
+	ofxBulletBaseSoftShape*			blobShape;
 	ofMaterial						shapesMat;
 	
 	bool bDrawDebug;
 	
-	
+	float blobRotX, blobRotY, blobRotZ;
 	ofMesh						logoMesh;
-	ofMesh						ringMesh;
-	ofIndexType					ringMesh_attachIndexEnd;
+	ofMesh						blobMesh;
+	ofIndexType					blobMesh_attachIndexEnd;
 	ofCamera					camera;
 	ofLight						light;
 	ofLight						keyLight;
 	ofLight						fillLight;
 	
 	ofxAssimpModelLoader		assimpModel;
-	ofxAssimpModelLoader		ringModel;
+	ofxAssimpModelLoader		blobModel;
 	
 	int randSeed;
 };

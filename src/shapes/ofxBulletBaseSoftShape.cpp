@@ -27,7 +27,7 @@ ofxBulletBaseSoftShape::~ofxBulletBaseSoftShape() {
 }
 
 
-void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr, float a_mass, float scale ) {
+void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr, float a_mass, float scale ) {
 	
 	_mass = a_mass;
 	_world = a_world;
@@ -82,7 +82,7 @@ void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, ofBuffer
 }
 
 
-void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, const ofMesh& mesh, btTransform a_bt_tr, float a_mass, float scale ){
+void ofxBulletBaseSoftShape::createFromOfMesh( btSoftRigidDynamicsWorld* a_world, const ofMesh& mesh, btTransform a_bt_tr, float a_mass, float scale ){
 	
 	if ( mesh.getMode() != OF_PRIMITIVE_TRIANGLES ) {
 		ofLogError("ofxBulletBaseSoftShape") << "create needs mesh with mode OF_PRIMITIVE_TRIANGLES";
@@ -115,7 +115,6 @@ void ofxBulletBaseSoftShape::create( btSoftRigidDynamicsWorld* a_world, const of
 	//_softBody->generateClusters(0);
 	_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
 	_softBody->m_cfg.kCHR = 0.8; // penetration
-	_softBody->m_cfg.kPR = 1.0f; // pressure
 	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
 	_softBody->m_cfg.collisions|=btSoftBody::fCollision::VF_SS;
 //	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
@@ -200,6 +199,12 @@ bool ofxBulletBaseSoftShape::operator!=( const ofxBulletRaycastData& a_e ) const
 
 
 
+void ofxBulletBaseSoftShape::moveNode( int nodeIndex, ofVec3f pos, float timeStep ) {
+	btVector3 delta = btVector3( pos.x, pos.y, pos.z ) - _softBody->m_nodes[nodeIndex].m_x;
+	_softBody->m_nodes[nodeIndex].m_v += delta/timeStep;
+}
+
+
 
 // GETTERS //
 
@@ -220,66 +225,13 @@ int ofxBulletBaseSoftShape::getActivationState() {
 	return ((btCollisionObject*)_softBody->getCollisionShape())->getActivationState();
 }
 
-//--------------------------------------------------------------
-int ofxBulletBaseSoftShape::getType() {
-	return _type;
-}
-
 
 //--------------------------------------------------------------
 float ofxBulletBaseSoftShape::getMass() const {
 	return _mass;
 }
 
-/*//--------------------------------------------------------------
-void ofxBulletBaseSoftShape::getOpenGLMatrix( btScalar* a_m ) {
-	ofGetOpenGLMatrixFromRigidBody( _softBody, a_m );
-}
 
-//--------------------------------------------------------------
-ofMatrix4x4 ofxBulletBaseSoftShape::getTransformationMatrix() const {
-	float	m[16];
-	ofGetOpenGLMatrixFromRigidBody( _softBody, m );
-	ofMatrix4x4 mat;
-	mat.set(m[0], m[1], m[2], m[3],
-			m[4], m[5], m[6], m[7],
-			m[8], m[9], m[10], m[11],
-			m[12], m[13], m[14], m[15]);
-	return mat;
-}*/
-
-/*
-//--------------------------------------------------------------
-ofVec3f ofxBulletBaseSoftShape::getPosition() const {
-	return ofGetVec3fPosFromRigidBody( _softBody );
-}
-
-// returns yaw, pitch, roll //
-//--------------------------------------------------------------
-ofVec3f ofxBulletBaseSoftShape::getRotation( ) const {
-	return ofGetRotationFromRigidBody( _softBody );
-}
-
-//--------------------------------------------------------------
-ofVec3f ofxBulletBaseSoftShape::getRotationAxis() const {
-	btQuaternion rotQuat		= _softBody->getWorldTransform().getRotation();
-	btVector3 btaxis			= rotQuat.getAxis();
-	return ofVec3f( btaxis.getX(), btaxis.getY(), btaxis.getZ() );
-}
-
-//--------------------------------------------------------------
-float ofxBulletBaseSoftShape::getRotationAngle() const {
-	btQuaternion rotQuat		= _softBody->getWorldTransform().getRotation();
-	return rotQuat.getAngle();
-}
-
-//--------------------------------------------------------------
-ofQuaternion ofxBulletBaseSoftShape::getRotationQuat() const {
-	ofVec3f axis	= getRotationAxis();
-	return ofQuaternion( axis.x, axis.y, axis.z, getRotationAngle());
-}
-
-*/
 
 
 //--------------------------------------------------------------
@@ -292,17 +244,6 @@ float ofxBulletBaseSoftShape::getFriction() const {
 	return _softBody->getFriction();
 }
 
-/*
-//--------------------------------------------------------------
-float ofxBulletBaseSoftShape::getDamping() const {
-	return (float)_softBody->getLinearDamping();
-}
-
-//--------------------------------------------------------------
-float ofxBulletBaseSoftShape::getAngularDamping() const {
-	return (float)_softBody->getAngularDamping();
-}
- */
 
 
 
@@ -347,25 +288,6 @@ void ofxBulletBaseSoftShape::setData(void* userPointer) {
 	_softBody->setUserPointer( _userPointer );
 }
 
-/*
-//--------------------------------------------------------------
-void ofxBulletBaseSoftShape::setDamping( float a_linear_damp ) {
-	setDamping( a_linear_damp, getAngularDamping() );
-}
-
-//--------------------------------------------------------------
-void ofxBulletBaseSoftShape::setAngularDamping( float a_angular_damp ) {
-	setDamping( getDamping(), a_angular_damp );
-}
-
-//--------------------------------------------------------------
-void ofxBulletBaseSoftShape::setDamping( float a_linear_damp, float a_angular_damp ) {
-	_softBody->setDamping(a_linear_damp, a_angular_damp);
-}
-
-*/
-
-
 
 // CHECKERS //
 //--------------------------------------------------------------
@@ -409,40 +331,6 @@ void ofxBulletBaseSoftShape::enableKinematic() {
 	getSoftBody()->setCollisionFlags( getSoftBody()->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT );
 }
 
-/*//--------------------------------------------------------------
-void ofxBulletBaseSoftShape::applyForce( const ofVec3f& a_frc, const ofVec3f& a_rel_pos ) {
-	_softBody->applyForce( btVector3(a_frc.x, a_frc.y, a_frc.z), btVector3(a_rel_pos.x, a_rel_pos.y, a_rel_pos.z) );
-}
-
-//--------------------------------------------------------------
-void ofxBulletBaseSoftShape::applyForce( const btVector3& a_frc, const btVector3& a_rel_pos ) {
-	_softBody->applyForce( a_frc, a_rel_pos );
-}*/
-
-/*
-//--------------------------------------------------------------
-void ofxBulletBaseSoftShape::applyCentralForce( const ofVec3f& a_frc ) {
-	applyCentralForce( btVector3(a_frc.x, a_frc.y, a_frc.z) );
-}
-void ofxBulletBaseSoftShape::applyCentralForce( float a_x, float a_y, float a_z ) {
-	applyCentralForce( btVector3(a_x, a_y, a_z) );
-}
-void ofxBulletBaseSoftShape::applyCentralForce( const btVector3& a_frc ) {
-	_softBody->applyCentralForce( a_frc );
-}
-
-//--------------------------------------------------------------
-void ofxBulletBaseSoftShape::applyTorque( const ofVec3f& a_torque ) {
-	applyTorque( btVector3(a_torque.x, a_torque.y, a_torque.z) );
-}
-void ofxBulletBaseSoftShape::applyTorque( float a_x, float a_y, float a_z ) {
-	applyTorque( btVector3( a_x, a_y, a_z ) );
-}
-void ofxBulletBaseSoftShape::applyTorque( const btVector3& a_torque ) {
-	_softBody->applyTorque( a_torque );
-}
-
-*/
 
 
 
@@ -495,4 +383,12 @@ void ofxBulletBaseSoftShape::draw(){
 
 
 
+void ofxBulletBaseSoftShape::setPressure( float pressure ) // -inf..inf
+{
+	_softBody->m_cfg.kPR = pressure;
+}
 
+void ofxBulletBaseSoftShape::setDamping( float damping ) // 0..1, 1 = fully damped
+{
+	_softBody->m_cfg.kDP = damping;
+}
