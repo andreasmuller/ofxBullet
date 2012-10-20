@@ -71,7 +71,9 @@ public:
 	int				getActivationState();
 
 	void setPressure( float pressure ); // -inf..inf
+	float getPressure();
 	void setDamping( float damping ); // 0..1, 1 = fully damped
+	float getDamping();
 	
 	float getMass() const;
 	

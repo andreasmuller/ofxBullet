@@ -69,7 +69,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
 	//_softBody->m_cfg.piterations = 2;
 	_softBody->setVolumeMass( a_mass );
-	_softBody->generateBendingConstraints(3);
+	_softBody->generateBendingConstraints(2);
 	_softBody->generateClusters(0);
 	
 	_softBody->transform( a_bt_tr );
@@ -111,7 +111,8 @@ void ofxBulletBaseSoftShape::createFromOfMesh( btSoftRigidDynamicsWorld* a_world
 	_softBody->scale( btVector3(scale, scale, scale));
 	setProperties(.4, .75);
 	
-	_softBody->generateBendingConstraints(2);
+//	_softBody->m_materials[0]->m_kLST = 0.3f;
+	_softBody->generateBendingConstraints(3);
 	//_softBody->generateClusters(0);
 	_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
 	_softBody->m_cfg.kCHR = 0.8; // penetration
@@ -123,7 +124,7 @@ void ofxBulletBaseSoftShape::createFromOfMesh( btSoftRigidDynamicsWorld* a_world
 	_softBody->m_cfg.kDF			=	0.5;
 	_softBody->m_cfg.collisions|=btSoftBody::fCollision::CL_SS;*/
 	_softBody->transform(a_bt_tr);
-	_softBody->setTotalMass(a_mass,false);
+	_softBody->setTotalMass(a_mass,true);
 	
 	_softBody->randomizeConstraints();
 /*	btMatrix3x3	m;
@@ -388,7 +389,16 @@ void ofxBulletBaseSoftShape::setPressure( float pressure ) // -inf..inf
 	_softBody->m_cfg.kPR = pressure;
 }
 
+float ofxBulletBaseSoftShape::getPressure() {
+	return _softBody->m_cfg.kPR;
+}
+
 void ofxBulletBaseSoftShape::setDamping( float damping ) // 0..1, 1 = fully damped
 {
 	_softBody->m_cfg.kDP = damping;
 }
+
+float ofxBulletBaseSoftShape::getDamping() {
+	return _softBody->m_cfg.kDP;
+}
+

@@ -139,8 +139,8 @@ void testApp::setup() {
 		softShapes.back()->createFromTetraBuffer( world.world, eleFile, faceFile, nodeFile, ofGetBtTransformFromVec3f(startLoc), tetraMass, tetraScale );*/
 
 		softShapes.back()->createFromOfMesh( world.world, blobMesh, ofGetBtTransformFromVec3f(startLoc), blobMass, blobScale );
-		softShapes.back()->setPressure( 0.1f );
-		softShapes.back()->setDamping( 0.05f );
+		softShapes.back()->setPressure( 10.f );
+		softShapes.back()->setDamping( 0.01f );
 
 		softShapes.back()->add();
 		blobShape = softShapes.back();
@@ -198,16 +198,16 @@ void testApp::update() {
 		diff *= 200.f;
 		boundsShape->applyCentralForce(diff);
 	}
-
+/*
 	// force the base vertices of the blob shape back to original positions
 	for ( int i=0; i<blobMesh_attachIndexEnd; i++ ) {
 		int nodeIndex = i;
 		ofVec3f position = blobMesh.getVertex(nodeIndex);
 		position.rotate( blobRotX, blobRotY, blobRotZ );
-		position.x += ofMap( mouseX, 0, ofGetWidth(), -5, 5 );
-		position.y += ofMap( mouseY, 0, ofGetWidth(), -5, 5 );
+		position.x += ofMap( mouseX, 0, ofGetWidth(), -10, 10 );
+		position.z += ofMap( mouseY, 0, ofGetWidth(), -15, 15 );
 		blobShape->moveNode( nodeIndex, position, 1.0f/60.0f );
-	}
+	}*/
 	
 	world.update();
 	
@@ -313,6 +313,7 @@ void testApp::draw() {
 	ss << "add spherers (s)" << endl;
 	ss << "add boxes (b)" << endl;
 	ss << "Gravity(up/down/left/right): x=" << gravity.x << " y= " << gravity.y << " z= " << gravity.z << endl;
+	ss << "Pressure " << blobShape->getPressure() << " damping " << blobShape->getDamping() << endl;
 	ofSetColor(255, 255, 255);
 	ofDrawBitmapString(ss.str().c_str(), 20, 20);
 }
@@ -385,6 +386,20 @@ void testApp::keyPressed(int key) {
 		case 'P':
 			blobRotZ -= 5;
 			break;
+			
+		case 'm':
+			blobShape->setDamping( blobShape->getDamping() * 1.1f );
+			break;
+		case 'M':
+			blobShape->setDamping( blobShape->getDamping() / 1.1f );
+			break;
+		case 'n':
+			blobShape->setPressure( blobShape->getPressure() * 1.1f );
+			break;
+		case 'N':
+			blobShape->setPressure( blobShape->getPressure() / 1.1f );
+			break;
+			
 		default:
 			break;
 	}
