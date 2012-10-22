@@ -29,10 +29,11 @@ public:
 	};
 	
 	/// tetrahedron version
-	virtual void createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr, float a_mass, float scale );
+	virtual void createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr, float mass, float scale, float springStrength=1.0f);
 	virtual void createFromOfMesh( btSoftRigidDynamicsWorld* a_world, const ofMesh& a_mesh, btTransform a_bt_tr, float a_mass, float scale );
-	virtual void add();
 	
+	virtual void add();
+		
 	void	remove();
 	void	removeSoftBody();
 	
@@ -76,6 +77,7 @@ public:
 	float getDamping();
 	
 	float getMass() const;
+	void setMass( float mass );
 	
 	void activate();
 	// can be called at any time //
@@ -91,6 +93,10 @@ public:
 
 	virtual void draw();
 	
+	const btAlignedObjectArray<btSoftBody::Node>& getNodes() { return _softBody->m_nodes; }
+	vector<ofVec3f> getNodeLocations();
+	void addNode( ofVec3f pos, float mass );
+	void addLink( int index0, int index1, btSoftBody::Material* material = 0/*, float linkStrength = 1.0f*/ );
 	
 	/*
 	 const btCylinderShape* cylinder = static_cast<const btCylinderShape*>(shapes[Body::UPPER]);

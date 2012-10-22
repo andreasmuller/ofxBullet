@@ -27,7 +27,8 @@ ofxBulletBaseSoftShape::~ofxBulletBaseSoftShape() {
 }
 
 
-void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr, float a_mass, float scale ) {
+void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr,
+												   float a_mass, float scale, float springStrength ) {
 	
 	_mass = a_mass;
 	_world = a_world;
@@ -63,22 +64,28 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	_softBody->scale( btVector3(scale, scale, scale) );
 	
+	_softBody->transform( a_bt_tr );
+
 	_bCreated = true;
+	//_softBody->generateBendingConstraints(2);
+	_softBody->generateClusters(2);
+	
+	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
+	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
+	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SS;
+	
+	
+	setProperties(.4, .75);
+	
+	
 	//_softBody->m_cfg.collisions	=	btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS;
+
+	ofLogNotice("ofxBulletBaseSoftShape") << "kLST was " << _softBody->m_materials[0]->m_kLST;
+	_softBody->m_materials[0]->m_kLST = springStrength;
 
 	_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
 	//_softBody->m_cfg.piterations = 2;
 	_softBody->setVolumeMass( a_mass );
-	_softBody->generateBendingConstraints(2);
-	_softBody->generateClusters(0);
-	
-	_softBody->transform( a_bt_tr );
-	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
-	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
-
-	
-	setProperties(.4, .75);
-
 }
 
 
@@ -233,6 +240,13 @@ float ofxBulletBaseSoftShape::getMass() const {
 }
 
 
+void ofxBulletBaseSoftShape::setMass(float mass) {
+	_mass = mass;
+	for ( int i=0; i<_softBody->m_nodes.size(); i++ ) {
+		_softBody->setMass( i, 0 );
+	}
+	_softBody->setVolumeMass(mass);
+}
 
 
 //--------------------------------------------------------------
@@ -341,6 +355,7 @@ void ofxBulletBaseSoftShape::draw(){
 //	ofSetColor( ofColor::white );
 
 	ofMesh mesh;
+	/*
 	for ( int i=0; i<_softBody->m_faces.size();++i )
 	{
 		const btSoftBody::Face face = _softBody->m_faces[i];
@@ -360,8 +375,8 @@ void ofxBulletBaseSoftShape::draw(){
 		mesh.addTriangle( vertIndex, vertIndex+1, vertIndex+2 );
 	}
 	mesh.drawFaces();
+	*/
 	
-	/*
 	mesh.clear();
 	for ( int i=0; i<_softBody->m_nodes.size();++i )
 	{
@@ -379,7 +394,7 @@ void ofxBulletBaseSoftShape::draw(){
 		ofVec3f aOf( a.getX(), a.getY(), a.getZ() );
 		ofVec3f bOf( b.getX(), b.getY(), b.getZ() );
 		ofLine( aOf, bOf );
-	}*/
+	}
 }
 
 
@@ -402,3 +417,24 @@ float ofxBulletBaseSoftShape::getDamping() {
 	return _softBody->m_cfg.kDP;
 }
 
+vector<ofVec3f> ofxBulletBaseSoftShape::getNodeLocations()
+{
+	vector<ofVec3f> output;
+	for ( int i=0; i<_softBody->m_nodes.size(); i++ ) {
+		btVector3 pos =  _softBody->m_nodes[i].m_x;
+		output.push_back( ofVec3f(pos.getX(), pos.getY(), pos.getZ()) );
+	}
+	return output;
+}
+
+void ofxBulletBaseSoftShape::addLink( int index0, int index1, btSoftBody::Material* material )
+{
+	_softBody->appendLink( index0, index1, material, true );
+//	btSoftBody::Link& link = _softBody->m_links[_softBody->m_links.size()-1];
+//	link.m_bbending = 1;
+	// linkStrength currently unsupported
+}
+
+void ofxBulletBaseSoftShape::addNode( ofVec3f pos, float mass ) {
+	_softBody->appendNode( btVector3(pos.x,pos.y,pos.z), mass );
+}
