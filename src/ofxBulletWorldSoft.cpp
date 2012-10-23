@@ -269,7 +269,9 @@ void ofxBulletWorldSoft::enableDebugDraw() {
 	if(!bHasDebugDrawer) {
 		world->setDebugDrawer( new GLDebugDrawer() );
 		// DBG_DrawContactPoints DBG_DrawAabb DBG_FastWireframe
-		world->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_MAX_DEBUG_DRAW_MODE);
+//		world->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_MAX_DEBUG_DRAW_MODE);
+		world->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe );
+//		(GLDebugDrawer*)(world->getDebugDrawer())->
 		bHasDebugDrawer = true;
 	}
 }

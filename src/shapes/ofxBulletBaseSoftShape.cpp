@@ -28,7 +28,7 @@ ofxBulletBaseSoftShape::~ofxBulletBaseSoftShape() {
 
 
 void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr,
-												   float a_mass, float scale, float springStrength, float borderSpringStrength ) {
+												   float a_mass, float scale, float springStrength, float bendingConstraintsSpringStrength, float borderSpringStrength ) {
 	
 	_mass = a_mass;
 	_world = a_world;
@@ -42,6 +42,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	btSoftBody::Material* defaultMaterial = _softBody->m_materials[0];
 	btSoftBody::Material* borderMaterial = _softBody->appendMaterial();
+	btSoftBody::Material* bendingConstraintsMaterial = _softBody->appendMaterial();
 	int borderMaterialIndex = 1;
 	*borderMaterial = *defaultMaterial;
 	defaultMaterial->m_kLST = springStrength;
@@ -49,6 +50,12 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 		borderMaterial->m_kLST = borderSpringStrength;
 	else
 		borderMaterial->m_kLST = springStrength;
+	borderMaterial->m_kVST = 0.0f;
+	borderMaterial->m_kAST = 0.0f;
+	if ( bendingConstraintsSpringStrength>= 0 )
+		bendingConstraintsMaterial->m_kLST = bendingConstraintsSpringStrength;
+	else
+		bendingConstraintsMaterial->m_kLST = springStrength;
 	
 	// ok, it seems we have to manually add faces
 	stringstream ss( faceFile.getBinaryBuffer() );
@@ -76,7 +83,6 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	_softBody->transform( a_bt_tr );
 
 	_bCreated = true;
-	//_softBody->generateBendingConstraints(2);
 	_softBody->generateClusters(2);
 	
 	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
@@ -486,3 +492,18 @@ int ofxBulletBaseSoftShape::getIndexOfNode(btSoftBody::Node *n) {
 	}
 	return -1;
 }
+
+set<int> ofxBulletBaseSoftShape::getAllNeighboursOf( int nodeIndex ){
+	set<int> results;
+	btSoftBody::Node* n = &getNode(nodeIndex);
+	for ( int i=0; i<_softBody->m_links.size(); i++ ) {
+		btSoftBody::Link& l = getLink(i);
+		if ( l.m_n[0] == n )
+			results.insert(getIndexOfNode(l.m_n[1]));
+		else if ( l.m_n[1] == n )
+			results.insert(getIndexOfNode(l.m_n[0]));
+
+	}
+	return results;
+}
+

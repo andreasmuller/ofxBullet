@@ -17,7 +17,7 @@
 #include "ofxBulletUtils.h"
 #include "ofxBulletUserData.h"
 #include "ofxBulletMousePickEvent.h"
-
+#include <set>
 
 class ofxBulletBaseSoftShape  {
 public:
@@ -30,7 +30,7 @@ public:
 	
 	/// tetrahedron version
 	virtual void createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr,
-									   float mass, float scale, float internalSpringStrength=1.0f, float borderSpringStrength=-1 );
+									   float mass, float scale, float internalSpringStrength=1.0f, float bendingConstraintsSpringStrength=-1, float borderSpringStrength=-1 );
 	virtual void createFromOfMesh( btSoftRigidDynamicsWorld* a_world, const ofMesh& a_mesh, btTransform a_bt_tr, float a_mass, float scale );
 	
 	virtual void add();
@@ -113,8 +113,7 @@ public:
 	btSoftBody::Link& getLink( int index ) { return _softBody->m_links[index]; };
 	int getIndexOfLinkBetween( int node0, int node1 );
 	btSoftBody::Link& getLinkBetween( int node0, int node1 ) { return getLink( getIndexOfLinkBetween(node0, node1) ); }
-	// perform after adding a link, done automatically unless addLink was called with suppressGenerateClusters==true
-	void generateClusters( int clusterSize=0 ) { _softBody->generateClusters( clusterSize ); }
+	set<int> getAllNeighboursOf( int node );
 	
 	// materials
 	int getMaterialIndexForLink( int linkIndex );
@@ -124,6 +123,10 @@ public:
 	float getMaterialSpringConstant( int matIndex ) { return _softBody->m_materials[matIndex]->m_kLST; }
 	
 	
+	// perform after adding a link, done automatically unless addLink was called with suppressGenerateClusters==true
+	void generateClusters( int clusterSize=0 ) { _softBody->generateClusters( clusterSize ); }
+	void generateBendingConstrings( int distance=2 ) { _softBody->generateBendingConstraints( distance, (_softBody->m_materials.size()>2)?_softBody->m_materials[2]:_softBody->m_materials[0]); }
+
 	/*
 	 const btCylinderShape* cylinder = static_cast<const btCylinderShape*>(shapes[Body::UPPER]);
 	 */
