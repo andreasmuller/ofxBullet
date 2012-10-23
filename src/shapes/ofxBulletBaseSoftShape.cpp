@@ -28,7 +28,7 @@ ofxBulletBaseSoftShape::~ofxBulletBaseSoftShape() {
 
 
 void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr,
-												   float a_mass, float scale, float springStrength ) {
+												   float a_mass, float scale, float springStrength, float borderSpringStrength ) {
 	
 	_mass = a_mass;
 	_world = a_world;
@@ -39,7 +39,16 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	_softBody = btSoftBodyHelpers::CreateFromTetGenData( a_world->getWorldInfo(), eleFile.getBinaryBuffer(), faceFile.getBinaryBuffer(),
 														nodeFile.getBinaryBuffer(),  
 														makeFaceLinks, makeTetraLinks, makeFacesFromTetras );
-//	_softBody = btSoftBodyHelpers::CreateFromTetGenData( a_world->getWorldInfo(), TetraBunny::getElements(), 0, TetraBunny::getNodes(), false, true, true );
+	
+	btSoftBody::Material* defaultMaterial = _softBody->m_materials[0];
+	btSoftBody::Material* borderMaterial = _softBody->appendMaterial();
+	int borderMaterialIndex = 1;
+	*borderMaterial = *defaultMaterial;
+	defaultMaterial->m_kLST = springStrength;
+	if ( borderSpringStrength>=0 )
+		borderMaterial->m_kLST = borderSpringStrength;
+	else
+		borderMaterial->m_kLST = springStrength;
 	
 	// ok, it seems we have to manually add faces
 	stringstream ss( faceFile.getBinaryBuffer() );
@@ -53,12 +62,12 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 		ss >> n0;
 		ss >> n1;
 		ss >> n2;
-		ofLogNotice("ofxBullBaseSoftShape") << faceIndex << " " << n0 << " " << n1 << " " << n2;
+		//ofLogNotice("ofxBullBaseSoftShape") << faceIndex << " " << n0 << " " << n1 << " " << n2;
 		_softBody->appendFace(n2, n1, n0);
 		if ( makeFaceLinks ) {
-			_softBody->appendLink( n0, n1, 0, true );
-			_softBody->appendLink( n1, n2, 0, true );
-			_softBody->appendLink( n2, n0, 0, true );
+			addLink( n0, n1, borderMaterialIndex, true, true );
+			addLink( n1, n2, borderMaterialIndex, true, true );
+			addLink( n0, n2, borderMaterialIndex, true, true );
 		}
 	}
 	
@@ -71,7 +80,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	_softBody->generateClusters(2);
 	
 	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
-	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
+	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
 	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SS;
 	
 	
@@ -80,13 +89,11 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	//_softBody->m_cfg.collisions	=	btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS;
 
-	ofLogNotice("ofxBulletBaseSoftShape") << "kLST was " << _softBody->m_materials[0]->m_kLST;
-	_softBody->m_materials[0]->m_kLST = springStrength;
-
 	_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
 	//_softBody->m_cfg.piterations = 2;
-	_softBody->setVolumeMass( a_mass );
+	_softBody->setVolumeDensity( a_mass );
 }
+
 
 
 void ofxBulletBaseSoftShape::createFromOfMesh( btSoftRigidDynamicsWorld* a_world, const ofMesh& mesh, btTransform a_bt_tr, float a_mass, float scale ){
@@ -427,14 +434,55 @@ vector<ofVec3f> ofxBulletBaseSoftShape::getNodeLocations()
 	return output;
 }
 
-void ofxBulletBaseSoftShape::addLink( int index0, int index1, btSoftBody::Material* material )
+void ofxBulletBaseSoftShape::addLink( int index0, int index1, int materialIndex, bool suppressGenerateClusters, bool replaceMaterial )
 {
-	_softBody->appendLink( index0, index1, material, true );
-//	btSoftBody::Link& link = _softBody->m_links[_softBody->m_links.size()-1];
-//	link.m_bbending = 1;
-	// linkStrength currently unsupported
+	int existingIndex = getIndexOfLinkBetween(index0, index1);
+	if ( existingIndex == -1 ) {
+		_softBody->appendLink( index0, index1, _softBody->m_materials[materialIndex] );
+		if ( !suppressGenerateClusters )
+			generateClusters();
+	} else if ( replaceMaterial ) {
+		getLink( existingIndex ).m_material = _softBody->m_materials[materialIndex];
+	}
+		
 }
 
 void ofxBulletBaseSoftShape::addNode( ofVec3f pos, float mass ) {
 	_softBody->appendNode( btVector3(pos.x,pos.y,pos.z), mass );
+}
+
+int ofxBulletBaseSoftShape::getIndexOfLinkBetween(int node0, int node1) {
+	if ( ! _softBody->checkLink(node0, node1) )
+		return -1;
+	
+	const btSoftBody::Node* n[]={&getNode(node0),&getNode(node1)};
+	for(int i=0,ni=getNumLinks();i<ni;++i)
+	{
+		const btSoftBody::Link&	l=getLink(i);
+		if(	(l.m_n[0]==n[0]&&l.m_n[1]==n[1])||
+		   (l.m_n[0]==n[1]&&l.m_n[1]==n[0]))
+		{
+			return(i);
+		}
+	}
+	return(-1);
+	
+}
+
+int ofxBulletBaseSoftShape::getMaterialIndexForLink(int linkIndex) {
+	btSoftBody::Link& l = getLink(linkIndex);
+	for ( int i=0; i<_softBody->m_materials.size(); i++ ) {
+		if ( l.m_material == _softBody->m_materials[i] )
+			return i;
+	}
+	return -1;
+}
+
+int ofxBulletBaseSoftShape::getIndexOfNode(btSoftBody::Node *n) {
+	for ( int i=0; i<_softBody->m_nodes.size(); i++ ) {
+		if ( &(_softBody->m_nodes[i]) == n ) {
+			return i;
+		}
+	}
+	return -1;
 }

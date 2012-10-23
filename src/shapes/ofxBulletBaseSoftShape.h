@@ -29,7 +29,8 @@ public:
 	};
 	
 	/// tetrahedron version
-	virtual void createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr, float mass, float scale, float springStrength=1.0f);
+	virtual void createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr,
+									   float mass, float scale, float internalSpringStrength=1.0f, float borderSpringStrength=-1 );
 	virtual void createFromOfMesh( btSoftRigidDynamicsWorld* a_world, const ofMesh& a_mesh, btTransform a_bt_tr, float a_mass, float scale );
 	
 	virtual void add();
@@ -93,10 +94,35 @@ public:
 
 	virtual void draw();
 	
-	const btAlignedObjectArray<btSoftBody::Node>& getNodes() { return _softBody->m_nodes; }
-	vector<ofVec3f> getNodeLocations();
+
+
+	// nodes
 	void addNode( ofVec3f pos, float mass );
-	void addLink( int index0, int index1, btSoftBody::Material* material = 0/*, float linkStrength = 1.0f*/ );
+	vector<ofVec3f> getNodeLocations();
+	int getNumNodes() { return _softBody->m_nodes.size(); }
+	btSoftBody::Node& getNode( int index ) { return _softBody->m_nodes[index]; }
+	int getIndexOfNode( btSoftBody::Node* n );
+	
+	
+	// links
+	/// if suppressGenerateClusters is true you need to call generateClusters after adding your links
+	/// if the link already exists and replaceMaterial is true, the existing link's material is replaced with the given materialIndex,
+	/// if the link already exists and replaceMaterial is false, the function just returns without modifying anything.
+	void addLink( int index0, int index1, int materialIndex = 0/*, float linkStrength = 1.0f*/, bool suppressGenerateClusters=false, bool replaceMaterial=false );
+	int getNumLinks() { return _softBody->m_links.size(); }
+	btSoftBody::Link& getLink( int index ) { return _softBody->m_links[index]; };
+	int getIndexOfLinkBetween( int node0, int node1 );
+	btSoftBody::Link& getLinkBetween( int node0, int node1 ) { return getLink( getIndexOfLinkBetween(node0, node1) ); }
+	// perform after adding a link, done automatically unless addLink was called with suppressGenerateClusters==true
+	void generateClusters( int clusterSize=0 ) { _softBody->generateClusters( clusterSize ); }
+	
+	// materials
+	int getMaterialIndexForLink( int linkIndex );
+	void setMaterialIndexForLink( int linkIndex, int matIndex ) { getLink(linkIndex).m_material = _softBody->m_materials[matIndex]; }
+	int addMaterial() { _softBody->appendMaterial(); return _softBody->m_materials.size()-1; }
+	void setMaterialSpringConstant( int matIndex, float springConstant ) { _softBody->m_materials[matIndex]->m_kLST = springConstant; _softBody->updateLinkConstants(); }
+	float getMaterialSpringConstant( int matIndex ) { return _softBody->m_materials[matIndex]->m_kLST; }
+	
 	
 	/*
 	 const btCylinderShape* cylinder = static_cast<const btCylinderShape*>(shapes[Body::UPPER]);
