@@ -32,6 +32,7 @@ public:
 	virtual void createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr,
 									   float mass, float scale, float internalSpringStrength=1.0f, float bendingConstraintsSpringStrength=-1, float borderSpringStrength=-1 );
 	virtual void createFromOfMesh( btSoftRigidDynamicsWorld* a_world, const ofMesh& a_mesh, btTransform a_bt_tr, float a_mass, float scale );
+	virtual void createFromPatch( btSoftRigidDynamicsWorld* a_world, ofVec3f topleft, ofVec3f topright, ofVec3f bottomleft, ofVec3f bottomright );
 	
 	virtual void add();
 		
@@ -93,7 +94,8 @@ public:
 	
 
 	virtual void draw();
-	
+	virtual void drawFaces();
+	virtual void drawLinksWithMaterial(int materialIndex);
 
 
 	// nodes
