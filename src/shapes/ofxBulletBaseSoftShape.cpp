@@ -77,6 +77,126 @@ void ofxBulletBaseSoftShape::createFromPatch( btSoftRigidDynamicsWorld* a_world,
 
 }
 
+static int nextLine(const char* buffer)
+{
+	int numBytesRead=0;
+	
+	while (*buffer != '\n')
+	{
+		buffer++;
+		numBytesRead++;
+	}
+	
+	
+	if (buffer[0]==0x0a)
+	{
+		buffer++;
+		numBytesRead++;
+	}
+	return numBytesRead;
+}
+
+
+
+btSoftBody* ofxBulletBaseSoftShape::createSoftBodyWithTetGenNodes( btSoftBodyWorldInfo& worldInfo, const char* node )
+{
+	btAlignedObjectArray<btVector3>	pos;
+	int								nnode=0;
+	int								ndims=0;
+	int								nattrb=0;
+	int								hasbounds=0;
+	int result = sscanf(node,"%d %d %d %d",&nnode,&ndims,&nattrb,&hasbounds);
+	result = sscanf(node,"%d %d %d %d",&nnode,&ndims,&nattrb,&hasbounds);
+	node += nextLine(node);
+	
+	pos.resize(nnode);
+	for(int i=0;i<pos.size();++i)
+	{
+		int			index=0;
+		float	x,y,z;
+		sscanf(node,"%d %f %f %f",&index,&x,&y,&z);
+		
+		node += nextLine(node);
+		
+		pos[index].setX(btScalar(x));
+		pos[index].setY(btScalar(y));
+		pos[index].setZ(btScalar(z));
+	}
+	btSoftBody*						psb=new btSoftBody(&worldInfo,nnode,&pos[0],0);
+	printf("Nodes:  %u\r\n",psb->m_nodes.size());
+
+	return psb;
+}
+
+
+void ofxBulletBaseSoftShape::appendTetGenTetras( const char* ele, bool btetralinks, btSoftBody::Material* linkMaterial ) {
+	if(ele&&ele[0])
+	{
+		btSoftBody* psb = _softBody;
+		int								ntetra=0;
+		int								ncorner=0;
+		int								neattrb=0;
+		sscanf(ele,"%d %d %d",&ntetra,&ncorner,&neattrb);
+		ele += nextLine(ele);
+		
+		//se>>ntetra;se>>ncorner;se>>neattrb;
+		for(int i=0;i<ntetra;++i)
+		{
+			int			index=0;
+			int			ni[4];
+			
+			//se>>index;
+			//se>>ni[0];se>>ni[1];se>>ni[2];se>>ni[3];
+			sscanf(ele,"%d %d %d %d %d",&index,&ni[0],&ni[1],&ni[2],&ni[3]);
+			ele+=nextLine(ele);
+			//for(int j=0;j<neattrb;++j)
+			//	se>>a;
+			psb->appendTetra(ni[0],ni[1],ni[2],ni[3]);
+			if(btetralinks)
+			{
+				psb->appendLink(ni[0],ni[1],linkMaterial,true);
+				psb->appendLink(ni[1],ni[2],linkMaterial,true);
+				psb->appendLink(ni[2],ni[0],linkMaterial,true);
+				psb->appendLink(ni[0],ni[3],linkMaterial,true);
+				psb->appendLink(ni[1],ni[3],linkMaterial,true);
+				psb->appendLink(ni[2],ni[3],linkMaterial,true);
+			}
+		}
+	}
+
+	printf("Tetras: %u\r\n",_softBody->m_tetras.size());
+
+}
+
+
+void ofxBulletBaseSoftShape::appendTetGenFaces( const char* face, bool makeFaceLinks, btSoftBody::Material* linkMaterial ) {
+	// ok, it seems we have to manually add faces
+	if ( face && face[0] ) {
+		stringstream ss( face );
+		int numFaces;
+		ss >> numFaces;
+		int hasBounds;
+		ss >> hasBounds;
+		for ( int i=0; i<numFaces; i++ ) {
+			int faceIndex, n0, n1, n2;
+			ss >> faceIndex;
+			ss >> n0;
+			ss >> n1;
+			ss >> n2;
+			//ofLogNotice("ofxBullBaseSoftShape") << faceIndex << " " << n0 << " " << n1 << " " << n2;
+			_softBody->appendFace(n0, n1, n2);
+			if ( makeFaceLinks ) {
+				_softBody->appendLink( n0, n1, linkMaterial );
+				_softBody->appendLink( n1, n2, linkMaterial );
+				_softBody->appendLink( n2, n0, linkMaterial );
+			}
+		}
+	}
+	
+}
+
+
+
 void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr,
 												   float a_mass, float scale, float springStrength, float bendingConstraintsSpringStrength, float borderSpringStrength ) {
 	
@@ -86,53 +206,46 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	bool makeFaceLinks = true;
 	bool makeTetraLinks = true;
 	bool makeFacesFromTetras = false; // has no effect anyway
-	_softBody = btSoftBodyHelpers::CreateFromTetGenData( a_world->getWorldInfo(), eleFile.getBinaryBuffer(), faceFile.getBinaryBuffer(),
-														nodeFile.getBinaryBuffer(),  
-														makeFaceLinks, makeTetraLinks, makeFacesFromTetras );
 	
-	btSoftBody::Material* defaultMaterial = _softBody->m_materials[0];
-	btSoftBody::Material* borderMaterial = _softBody->appendMaterial();
+
+	// create
+	_softBody = createSoftBodyWithTetGenNodes( a_world->getWorldInfo(), nodeFile.getBinaryBuffer() );
+	_softBody->scale( btVector3(scale, scale, scale) );
+	_softBody->transform( a_bt_tr );
+	_bCreated = true;
+	
+
+
+	// setup materials
+	btSoftBody::Material* tetraMaterial = _softBody->m_materials[0];
+	btSoftBody::Material* faceMaterial = _softBody->appendMaterial();
 	btSoftBody::Material* bendingConstraintsMaterial = _softBody->appendMaterial();
 	int borderMaterialIndex = 1;
-	*borderMaterial = *defaultMaterial;
-	defaultMaterial->m_kLST = springStrength;
+	*faceMaterial = *tetraMaterial;
+	tetraMaterial->m_kLST = springStrength;
 	if ( borderSpringStrength>=0 )
-		borderMaterial->m_kLST = borderSpringStrength;
+		faceMaterial->m_kLST = borderSpringStrength;
 	else
-		borderMaterial->m_kLST = springStrength;
-//	borderMaterial->m_kVST = 0.0f;
-//	borderMaterial->m_kAST = 0.0f;
+		faceMaterial->m_kLST = springStrength;
 	if ( bendingConstraintsSpringStrength>= 0 )
 		bendingConstraintsMaterial->m_kLST = bendingConstraintsSpringStrength;
 	else
 		bendingConstraintsMaterial->m_kLST = springStrength;
-	
-	// ok, it seems we have to manually add faces
-	stringstream ss( faceFile.getBinaryBuffer() );
-	int numFaces;
-	ss >> numFaces;
-	int hasBounds;
-	ss >> hasBounds;
-	for ( int i=0; i<numFaces; i++ ) {
-		int faceIndex, n0, n1, n2;
-		ss >> faceIndex;
-		ss >> n0;
-		ss >> n1;
-		ss >> n2;
-		//ofLogNotice("ofxBullBaseSoftShape") << faceIndex << " " << n0 << " " << n1 << " " << n2;
-		_softBody->appendFace(n0, n1, n2);
-		if ( makeFaceLinks ) {
-			addLink( n0, n1, borderMaterialIndex, true, true );
-			addLink( n1, n2, borderMaterialIndex, true, true );
-			addLink( n0, n2, borderMaterialIndex, true, true );
-		}
-	}
-	
-	_softBody->scale( btVector3(scale, scale, scale) );
-	
-	_softBody->transform( a_bt_tr );
 
-	_bCreated = true;
+	
+	
+	// add faces
+	appendTetGenFaces( faceFile.getBinaryBuffer(), /*faceLinks*/true, faceMaterial );
+	// create bending constraints for face links
+	_softBody->generateBendingConstraints(3, bendingConstraintsMaterial);
+	
+	
+	// add tetras
+	appendTetGenTetras( eleFile.getBinaryBuffer(), /*tetraLinks*/true, tetraMaterial );
+	
+	
+	
+	// config
 	
 	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
 	
@@ -152,7 +265,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	_softBody->m_cfg.viterations = 4;*/
 	
 	_softBody->m_cfg.piterations=2;
-	_softBody->m_cfg.kDF			=0.3;
+	_softBody->m_cfg.kDF			=0.8;
 	_softBody->m_cfg.kSHR = 1.0f;
 	_softBody->m_cfg.kCHR = 1.0f;
 	_softBody->m_cfg.kSSHR_CL		=0.8;
