@@ -26,6 +26,220 @@ ofxBulletBaseSoftShape::~ofxBulletBaseSoftShape() {
 	remove();
 }
 
+void ofxBulletBaseSoftShape::createFromCuboid( btSoftRigidDynamicsWorld* a_world, ofVec3f topleftback, ofVec3f bottomrightfront, int countX, int countY, int countZ, float totalMass  )
+{
+
+	_world = a_world;
+
+	// from OpenTissue
+	/**
+	 * t4mesh Block Generator.
+	 *
+	 * @param I               The number of blocks along x axis.
+	 * @param J               The number of blocks along y axis.
+	 * @param K               The number of blocks along z axis.
+	 * @param block_width     The edgelength of the blocks along x-axis.
+	 * @param block_height    The edgelength of the blocks along x-axis.
+	 * @param block_depth     The edgelength of the blocks along x-axis.
+	 * @param mesh            A generic t4mesh, which upon return holds the generated mesh.
+	 */
+	
+	unsigned int I = countX;
+	unsigned int J = countY;
+	unsigned int K = countZ;
+	float block_width = (bottomrightfront.x-topleftback.x)/countX;
+	float block_depth = (bottomrightfront.y-topleftback.y)/countY;
+	float block_height = (bottomrightfront.z-topleftback.z)/countZ;
+	float oX = topleftback.x;
+	float oY = topleftback.y;
+	float oZ = topleftback.z;
+
+	{
+		float m = 1;
+		
+		unsigned int numVertices = (I + 1) * (J + 1) * (K + 1);
+		btVector3* vertices = new btVector3[numVertices];
+		btScalar* masses = new btScalar[numVertices];
+		
+		unsigned int vertIt = 0;
+		for (unsigned int x = 0; x <= I; ++x)
+		{
+			for (unsigned int y = 0; y <= J; ++y)
+			{
+				for (unsigned int z = 0; z <= K; ++z)
+				{
+					vertices[vertIt] = btVector3( oX+block_width*x, oY+block_depth*y, oZ+block_height*z );
+					masses[vertIt] = m;
+					vertIt++;
+				}
+			}
+		}
+		
+		_softBody = new btSoftBody(&_world->getWorldInfo(),numVertices,vertices,masses);
+
+		delete[] masses;
+		delete[] vertices;
+		
+		unsigned int fixeds = 1|2|4|8;
+
+#define IDX(_x_,_y_,_z_) (((_x_*(J+1)+_y_)*(K+1))+_z_)
+		if(fixeds&1)	_softBody->setMass(IDX(0,J,0),0);
+		if(fixeds&2)	_softBody->setMass(IDX(I,J,0),0);
+		if(fixeds&4)	_softBody->setMass(IDX(0,J,K),0);
+		if(fixeds&8)	_softBody->setMass(IDX(I,J,K),0);
+		
+
+
+		for (unsigned int i = 0; i < I; ++i)
+		{
+			for (unsigned int j = 0; j < J; ++j)
+			{
+				for (unsigned int k = 0; k < K; ++k)
+				{
+					// For each block, the 8 corners are numerated as:
+					//     4*-----*7
+					//     /|    /|            |  J
+					//    / |   / |            |
+					//  5*-----*6 |            |
+					//   | 0*--|--*3           *------> I
+					//   | /   | /            /
+					//   |/    |/            / K
+					//  1*-----*2
+					int p0 = (i * (J + 1) + j) * (K + 1) + k;
+					int p1 = p0 + 1;
+					int p3 = ((i + 1) * (J + 1) + j) * (K + 1) + k;
+					int p2 = p3 + 1;
+					int p7 = ((i + 1) * (J + 1) + (j + 1)) * (K + 1) + k;
+					int p6 = p7 + 1;
+					int p4 = (i * (J + 1) + (j + 1)) * (K + 1) + k;
+					int p5 = p4 + 1;
+					
+					// add faces
+					if ( j==J-1 ) {
+						_softBody->appendFace( p6, p7, p4 );
+						_softBody->appendFace( p4, p5, p6 );
+					}
+					if ( j==0 )	{
+						_softBody->appendFace( p3, p1, p2 );
+						_softBody->appendFace( p0, p1, p3 );
+					}
+					if ( k==K-1 ){
+						_softBody->appendFace( p1, p2, p6 );
+						_softBody->appendFace( p6, p5, p1 );
+					}
+					if ( k==0 )	{
+						_softBody->appendFace( p4, p7, p3 );
+						_softBody->appendFace( p4, p3, p0 );
+					}
+					
+					if ( i==0 )	{
+						_softBody->appendFace( p1, p5, p4 );
+						_softBody->appendFace( p4, p0, p1 );
+					}
+					if ( i==I-1 ) {
+						_softBody->appendFace( p6, p7, p3 );
+						_softBody->appendFace( p6, p3, p2 );
+					}
+					
+					// add links for cube edges
+					_softBody->appendLink( p0, p1 );
+					_softBody->appendLink( p0, p3 );
+					_softBody->appendLink( p0, p4 );
+					// add the end, there will be one more set of links to add
+					if ( k == K-1 )
+					{
+						_softBody->appendLink( p1, p2 );
+						_softBody->appendLink( p1, p5 );
+						_softBody->appendLink( p2, p6 );
+					}
+					if ( j == J-1 )
+					{
+						_softBody->appendLink( p4, p5 );
+						_softBody->appendLink( p4, p7 );
+						_softBody->appendLink( p5, p6 );
+					}
+					if ( i == I-1 )
+					{
+						_softBody->appendLink( p7, p3 );
+						_softBody->appendLink( p3, p2 );
+						_softBody->appendLink( p6, p7 );
+					}
+					
+					// Ensure that neighboring tetras are sharing faces
+					if ((i + j + k) % 2 == 1)
+					{
+						_softBody->appendTetra(p1,p2,p6,p3);
+						_softBody->appendTetra(p3,p6,p4,p7);
+						_softBody->appendTetra(p1,p4,p6,p5);
+						_softBody->appendTetra(p1,p3,p4,p0);
+						_softBody->appendTetra(p1,p6,p4,p3);
+
+						_softBody->appendLink( p1, p6 );
+						_softBody->appendLink( p6, p3 );
+						_softBody->appendLink( p6, p4 );
+						_softBody->appendLink( p1, p4 );
+						_softBody->appendLink( p1, p3 );
+						_softBody->appendLink( p4, p3 );
+						
+
+					}
+					else
+					{
+						_softBody->appendTetra(p2,p0,p5,p1);
+						_softBody->appendTetra(p2,p7,p0,p3);
+						_softBody->appendTetra(p2,p5,p7,p6);
+						_softBody->appendTetra(p0,p7,p5,p4);
+						_softBody->appendTetra(p2,p0,p7,p5);
+						
+						_softBody->appendLink( p2, p0 );
+						_softBody->appendLink( p0, p5 );
+						_softBody->appendLink( p2, p7 );
+						_softBody->appendLink( p7, p0 );
+						_softBody->appendLink( p2, p5 );
+						_softBody->appendLink( p5, p7 );
+					}
+				}
+			}
+		}
+    }
+	
+	_bCreated = true;
+	_softBody->m_materials[0]->m_kLST	=	0.9f;
+
+	_softBody->m_cfg.piterations=2;
+	_softBody->m_cfg.kDF			=0.5;
+	_softBody->m_cfg.kCHR			= 1.0f;
+	_softBody->m_cfg.kSHR			= 1.0f;
+	_softBody->m_cfg.kSSHR_CL		=0.3;
+	_softBody->m_cfg.kSS_SPLT_CL	=0.8;
+	_softBody->m_cfg.kSKHR_CL		=0.1f;
+	_softBody->m_cfg.kSK_SPLT_CL	=1;
+	_softBody->m_cfg.collisions=	btSoftBody::fCollision::CL_SS+
+	 btSoftBody::fCollision::CL_RS;
+	
+	
+//	_softBody->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::VF_SS;
+	_softBody->getCollisionShape()->setMargin(0.2);
+	
+	_softBody->randomizeConstraints();
+	
+	_mass = totalMass;
+	_softBody->setTotalMass(totalMass);
+	setProperties(.4, .1);
+	
+	_softBody->m_cfg.citerations = 4;
+	_softBody->m_cfg.diterations = 4;
+	_softBody->m_cfg.piterations = 4;
+	_softBody->m_cfg.viterations = 4;
+	
+	
+	
+	
+	_softBody->generateClusters(128);
+	
+
+}
+
 void ofxBulletBaseSoftShape::createFromPatch( btSoftRigidDynamicsWorld* a_world, ofVec3f topleft, ofVec3f topright, ofVec3f bottomleft, ofVec3f bottomright )
 {
 	_world = a_world;
@@ -184,12 +398,15 @@ void ofxBulletBaseSoftShape::appendTetGenFaces( const char* face, bool makeFaceL
 			ss >> n1;
 			ss >> n2;
 			//ofLogNotice("ofxBullBaseSoftShape") << faceIndex << " " << n0 << " " << n1 << " " << n2;
-			_softBody->appendFace(n0, n1, n2);
+			_softBody->appendFace(n2, n1, n0);
 			if ( makeFaceLinks ) {
 				_softBody->appendLink( n0, n1, linkMaterial );
 				_softBody->appendLink( n1, n2, linkMaterial );
 				_softBody->appendLink( n2, n0, linkMaterial );
 			}
+			externalNodes.insert(n0);
+			externalNodes.insert(n1);
+			externalNodes.insert(n2);
 		}
 	}
 	
@@ -223,6 +440,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	int borderMaterialIndex = 1;
 	*faceMaterial = *tetraMaterial;
 	tetraMaterial->m_kLST = springStrength;
+	tetraMaterial->m_kVST = 1.0f;
 	if ( borderSpringStrength>=0 )
 		faceMaterial->m_kLST = borderSpringStrength;
 	else
@@ -235,13 +453,13 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	
 	// add faces
-	appendTetGenFaces( faceFile.getBinaryBuffer(), /*faceLinks*/true, faceMaterial );
+	appendTetGenFaces( faceFile.getBinaryBuffer(), makeFaceLinks, faceMaterial );
 	// create bending constraints for face links
 	_softBody->generateBendingConstraints(3, bendingConstraintsMaterial);
 	
 	
 	// add tetras
-	appendTetGenTetras( eleFile.getBinaryBuffer(), /*tetraLinks*/true, tetraMaterial );
+	appendTetGenTetras( eleFile.getBinaryBuffer(), makeTetraLinks, tetraMaterial );
 	
 	
 	
@@ -250,9 +468,9 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
 	
 	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
-	_softBody->m_cfg.collisions |= btSoftBody::fCollision::VF_SS;
-	/*_softBody->m_cfg.collisions		|=	btSoftBody::fCollision::CL_SS;
-	_softBody->m_cfg.collisions		|=	btSoftBody::fCollision::CL_RS;*/
+	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::VF_SS;
+	_softBody->m_cfg.collisions		|=	btSoftBody::fCollision::CL_SS;
+	_softBody->m_cfg.collisions		|=	btSoftBody::fCollision::CL_RS;
 	_softBody->randomizeConstraints();
 	
 /*
@@ -282,7 +500,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	_softBody->randomizeConstraints();
 
 
-	_softBody->generateClusters(0);
+	_softBody->generateClusters(128);
 	
 	setProperties(.9, .1);
 	
@@ -703,16 +921,30 @@ int ofxBulletBaseSoftShape::getIndexOfNode(btSoftBody::Node *n) {
 	return -1;
 }
 
-set<int> ofxBulletBaseSoftShape::getAllNeighboursOf( int nodeIndex ){
+set<int> ofxBulletBaseSoftShape::getAllLinksTouching( int nodeIndex ) {
 	set<int> results;
 	btSoftBody::Node* n = &getNode(nodeIndex);
 	for ( int i=0; i<_softBody->m_links.size(); i++ ) {
 		btSoftBody::Link& l = getLink(i);
 		if ( l.m_n[0] == n )
+			results.insert(i);
+		else if ( l.m_n[1] == n )
+			results.insert(i);
+		
+	}
+	return results;
+}
+
+set<int> ofxBulletBaseSoftShape::getAllNeighboursOf( int nodeIndex ){
+	set<int> links = getAllLinksTouching( nodeIndex );
+	btSoftBody::Node* n = &getNode(nodeIndex);
+	set<int> results;
+	for ( set<int>::iterator it = links.begin(); it != links.end(); ++it ) {
+		btSoftBody::Link& l = getLink(*it);
+		if ( l.m_n[0] == n )
 			results.insert(getIndexOfNode(l.m_n[1]));
 		else if ( l.m_n[1] == n )
 			results.insert(getIndexOfNode(l.m_n[0]));
-
 	}
 	return results;
 }

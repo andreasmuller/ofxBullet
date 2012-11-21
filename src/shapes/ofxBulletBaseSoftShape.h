@@ -33,6 +33,8 @@ public:
 									   float mass, float scale, float internalSpringStrength=1.0f, float bendingConstraintsSpringStrength=-1, float borderSpringStrength=-1 );
 	virtual void createFromOfMesh( btSoftRigidDynamicsWorld* a_world, const ofMesh& a_mesh, btTransform a_bt_tr, float a_mass, float scale );
 	virtual void createFromPatch( btSoftRigidDynamicsWorld* a_world, ofVec3f topleft, ofVec3f topright, ofVec3f bottomleft, ofVec3f bottomright );
+	virtual void createFromCuboid( btSoftRigidDynamicsWorld* a_world, ofVec3f topleftback, ofVec3f bottomrightfront, int countX, int countY, int countZ, float totalMass  );
+
 	
 	virtual void add();
 		
@@ -104,6 +106,7 @@ public:
 	int getNumNodes() { return _softBody->m_nodes.size(); }
 	btSoftBody::Node& getNode( int index ) { return _softBody->m_nodes[index]; }
 	int getIndexOfNode( btSoftBody::Node* n );
+	bool isNodeExternal( int nodeIndex ) { return externalNodes.count(nodeIndex); }
 	
 	
 	// links
@@ -116,6 +119,8 @@ public:
 	int getIndexOfLinkBetween( int node0, int node1 );
 	btSoftBody::Link& getLinkBetween( int node0, int node1 ) { return getLink( getIndexOfLinkBetween(node0, node1) ); }
 	set<int> getAllNeighboursOf( int node );
+	set<int> getAllLinksTouching( int nodeIndex );
+
 	
 	// materials
 	int getMaterialIndexForLink( int linkIndex );
@@ -123,7 +128,7 @@ public:
 	int addMaterial() { _softBody->appendMaterial(); return _softBody->m_materials.size()-1; }
 	void setMaterialSpringConstant( int matIndex, float springConstant ) { _softBody->m_materials[matIndex]->m_kLST = springConstant; _softBody->updateLinkConstants(); }
 	float getMaterialSpringConstant( int matIndex ) { return _softBody->m_materials[matIndex]->m_kLST; }
-	
+	int getExternalMaterialIndex() { return 1; }
 	
 	// perform after adding a link, done automatically unless addLink was called with suppressGenerateClusters==true
 	void generateClusters( int clusterSize=0 ) { _softBody->generateClusters( clusterSize ); }
@@ -143,6 +148,8 @@ protected:
 	bool						_bInited;
 	bool						_bCreated;
 	bool						_bAdded;
+	
+	set<int>					externalNodes;
 	
 	btSoftBody* createSoftBodyWithTetGenNodes( btSoftBodyWorldInfo& worldInfo, const char* node );
 	void appendTetGenFaces( const char* face, bool makeFaceLinks, btSoftBody::Material* linkMaterial );
