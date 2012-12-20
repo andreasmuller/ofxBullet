@@ -1012,3 +1012,10 @@ float ofxBulletBaseSoftShape::calculateVolumeOfTetras() const {
 	}
 	return volume;
 }
+
+void ofxBulletBaseSoftShape::anchorNode( int nodeIndex, btRigidBody* anchorBody, ofVec3f offs )
+{
+	btVector3 offset = btVector3(offs.x, offs.y, offs.z);
+	_softBody->appendAnchor( nodeIndex, anchorBody, offset );
+}
+

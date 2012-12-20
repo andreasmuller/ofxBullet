@@ -17,6 +17,7 @@
 #include "ofxBulletUtils.h"
 #include "ofxBulletUserData.h"
 #include "ofxBulletMousePickEvent.h"
+#include "ofxBulletBaseRigidShape.h"
 #include <set>
 
 class ofxBulletBaseSoftShape  {
@@ -44,6 +45,8 @@ public:
 	
 	// move the node with the given index to the given position. timeStep is the last simulation time step
 	void moveNode( int nodeIndex, ofVec3f pos, float timeStep );
+	
+	void anchorNode( int nodeIndex, btRigidBody* anchorBody, ofVec3f offset );
 	
 	// GETTERS //
 	btSoftBody*	getSoftBody();
