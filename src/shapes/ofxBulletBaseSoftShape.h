@@ -80,8 +80,18 @@ public:
 	void setDamping( float damping ); // 0..1, 1 = fully damped
 	float getDamping();
 	
+	void setVolumeConservationCoefficient( float coeff );
+	float getVolumeConservationCoefficient();
+	
+	void setTetraPressure( float p );
+	float getTetraPressure();
+	
 	float getMass() const;
 	void setMass( float mass );
+	
+	float getVolume() const;
+	float getRestVolume() const;
+	float calculateVolumeOfTetras() const;
 	
 	void activate();
 	// can be called at any time //

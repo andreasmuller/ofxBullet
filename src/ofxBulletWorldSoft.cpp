@@ -10,6 +10,7 @@
 #include "ofxBulletWorldSoft.h"
 #include "BulletSoftBody/btSoftBodySolvers.h"
 
+#include "BulletSoftBody/btSoftBodyHelpers.h"
 
 
 //--------------------------------------------------------------
@@ -65,6 +66,24 @@ void ofxBulletWorldSoft::setup() {
 	world->getWorldInfo().m_sparsesdf.Initialize();
 	world->getWorldInfo().air_density		=	(btScalar)1.2;
 	world->getWorldInfo().m_sparsesdf.Reset();
+	
+	/*
+	Nodes		=	0x0001,
+	Links		=	0x0002,
+	Faces		=	0x0004,
+	Tetras		=	0x0008,
+	Normals		=	0x0010,
+	Contacts	=	0x0020,
+	Anchors		=	0x0040,
+	Notes		=	0x0080,
+	Clusters	=	0x0100,
+	NodeTree	=	0x0200,
+	FaceTree	=	0x0400,
+	ClusterTree	=	0x0800,
+	Joints		=	0x1000,
+	Std			=	Links+Faces+Tetras+Anchors+Notes+Joints,
+	StdTetra	=	Std-Faces+Tetras*/
+	world->setDrawFlags(fDrawFlags::Clusters);
 
 
 }

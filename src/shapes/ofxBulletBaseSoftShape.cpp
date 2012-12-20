@@ -368,12 +368,18 @@ void ofxBulletBaseSoftShape::appendTetGenTetras( const char* ele, bool btetralin
 			psb->appendTetra(ni[0],ni[1],ni[2],ni[3]);
 			if(btetralinks)
 			{
-				psb->appendLink(ni[0],ni[1],linkMaterial,true);
-				psb->appendLink(ni[1],ni[2],linkMaterial,true);
-				psb->appendLink(ni[2],ni[0],linkMaterial,true);
-				psb->appendLink(ni[0],ni[3],linkMaterial,true);
-				psb->appendLink(ni[1],ni[3],linkMaterial,true);
-				psb->appendLink(ni[2],ni[3],linkMaterial,true);
+				//if ( ofRandomuf()>0.5f )
+				{
+					psb->appendLink(ni[0],ni[1],linkMaterial,true);
+					psb->appendLink(ni[1],ni[2],linkMaterial,true);
+					psb->appendLink(ni[2],ni[0],linkMaterial,true);
+				}
+				//else
+				{
+					psb->appendLink(ni[0],ni[3],linkMaterial,true);
+					psb->appendLink(ni[1],ni[3],linkMaterial,true);
+					psb->appendLink(ni[2],ni[3],linkMaterial,true);
+				}
 			}
 		}
 	}
@@ -399,10 +405,15 @@ void ofxBulletBaseSoftShape::appendTetGenFaces( const char* face, bool makeFaceL
 			ss >> n2;
 			//ofLogNotice("ofxBullBaseSoftShape") << faceIndex << " " << n0 << " " << n1 << " " << n2;
 			_softBody->appendFace(n2, n1, n0);
+			// randomly skip two links
+			//int skipLink = ofRandom(2.99999999999);
 			if ( makeFaceLinks ) {
-				_softBody->appendLink( n0, n1, linkMaterial );
-				_softBody->appendLink( n1, n2, linkMaterial );
-				_softBody->appendLink( n2, n0, linkMaterial );
+				//if ( skipLink == 0 )
+					_softBody->appendLink( n0, n1, linkMaterial );
+				//if ( skipLink == 1 )
+					_softBody->appendLink( n1, n2, linkMaterial );
+				//if ( skipLink == 2 )
+					_softBody->appendLink( n2, n0, linkMaterial );
 			}
 			externalNodes.insert(n0);
 			externalNodes.insert(n1);
@@ -462,7 +473,6 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	appendTetGenTetras( eleFile.getBinaryBuffer(), makeTetraLinks, tetraMaterial );
 	
 	
-	
 	// config
 	
 	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
@@ -484,17 +494,24 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	_softBody->m_cfg.piterations=2;
 	_softBody->m_cfg.kDF			=0.8;
+	_softBody->m_cfg.kVC = 1.0f;
 	_softBody->m_cfg.kSHR = 1.0f;
 	_softBody->m_cfg.kCHR = 1.0f;
 	_softBody->m_cfg.kSSHR_CL		=0.8;
 	_softBody->m_cfg.kSS_SPLT_CL	=0.5;
+	_softBody->m_cfg.kSRHR_CL		=0.5f;
 	_softBody->m_cfg.kSKHR_CL		=0.1f;
 	_softBody->m_cfg.kSK_SPLT_CL	=0.5;
+	
+	_softBody->m_cfg.kTetraPressure = 0;
+
 	/*_softBody->m_cfg.collisions=	btSoftBody::fCollision::CL_SS+
 	btSoftBody::fCollision::CL_RS;*/
-	_softBody->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::VF_SS;
+	//_softBody->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::VF_SS;
 
 	_softBody->getCollisionShape()->setMargin(0.2);
+	
+	_softBody->setPose( true, true );
 
 	
 	_softBody->randomizeConstraints();
@@ -511,6 +528,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	//_softBody->m_cfg.piterations = 2;
 	_softBody->setVolumeDensity( a_mass );
 }
+
 
 
 
@@ -849,6 +867,17 @@ float ofxBulletBaseSoftShape::getPressure() {
 	return _softBody->m_cfg.kPR;
 }
 
+void ofxBulletBaseSoftShape::setVolumeConservationCoefficient( float coeff )
+{
+	_softBody->m_cfg.kVC = coeff;
+}
+
+float ofxBulletBaseSoftShape::getVolumeConservationCoefficient()
+{
+	return _softBody->m_cfg.kVC;
+}
+
+
 void ofxBulletBaseSoftShape::setDamping( float damping ) // 0..1, 1 = fully damped
 {
 	_softBody->m_cfg.kDP = damping;
@@ -857,6 +886,16 @@ void ofxBulletBaseSoftShape::setDamping( float damping ) // 0..1, 1 = fully damp
 float ofxBulletBaseSoftShape::getDamping() {
 	return _softBody->m_cfg.kDP;
 }
+
+void ofxBulletBaseSoftShape::setTetraPressure( float p ) 
+{
+	_softBody->m_cfg.kTetraPressure = p;
+}
+
+float ofxBulletBaseSoftShape::getTetraPressure() {
+	return _softBody->m_cfg.kTetraPressure;
+}
+
 
 vector<ofVec3f> ofxBulletBaseSoftShape::getNodeLocations()
 {
@@ -949,3 +988,27 @@ set<int> ofxBulletBaseSoftShape::getAllNeighboursOf( int nodeIndex ){
 	return results;
 }
 
+float ofxBulletBaseSoftShape::getRestVolume() const {
+	double v = 0;
+	for ( int i=0; i<_softBody->m_tetras.size(); i++ )
+		v += _softBody->m_tetras[i].m_rv;
+	return v;
+}
+
+float ofxBulletBaseSoftShape::getVolume() const {
+	return _softBody->getVolume();
+}
+
+float ofxBulletBaseSoftShape::calculateVolumeOfTetras() const {
+	double volume = 0;
+	for ( int i=0; i<_softBody->m_tetras.size(); i++ ) {
+		btSoftBody::Tetra& t = _softBody->m_tetras[i];
+		const btVector3& a = t.m_n[0]->m_x;
+		const btVector3& b = t.m_n[1]->m_x;
+		const btVector3& c = t.m_n[2]->m_x;
+		const btVector3& d = t.m_n[3]->m_x;
+		double v = ( (a-b).dot((b-d).cross(c-d))) / 6.0;
+		volume += v;
+	}
+	return volume;
+}
