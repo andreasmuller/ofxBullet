@@ -10,6 +10,8 @@
 #include "ofxBulletBaseSoftShape.h"
 #include "BulletSoftBody/btSoftBodyHelpers.h"
 #include "Bunny.h"
+#include <deque>
+#include <queue>
 
 //--------------------------------------------------------------
 ofxBulletBaseSoftShape::ofxBulletBaseSoftShape() {
@@ -24,6 +26,81 @@ ofxBulletBaseSoftShape::ofxBulletBaseSoftShape() {
 //--------------------------------------------------------------
 ofxBulletBaseSoftShape::~ofxBulletBaseSoftShape() {
 	remove();
+}
+
+vector<int> ofxBulletBaseSoftShape::findShortestPath( int from, int to )
+{
+	// breadth-first
+	typedef struct Ligament
+	{
+		vector<int> path;
+		btVector3 direction;
+		int next;
+		float fitness;
+		Ligament( int start ) { next = start; fitness=1; }
+		bool operator<( const Ligament& other) const { return fitness < other.fitness; }
+	} Ligament;
+	priority_queue<Ligament> queue;
+	set<int> visited;
+	
+	btVector3 startPos = this->getNode(from).m_x;
+	queue.push( Ligament(from) );
+	
+	while ( !queue.empty() )
+	{
+		// dequeue
+		Ligament ligament = queue.top();
+		queue.pop();
+		int current = ligament.next;
+		
+		// continue if visited
+		if ( visited.find(current) != visited.end() )
+		{
+			continue;
+		}
+		
+		// visit current
+		visited.insert(current);
+		// update path
+		ligament.path.push_back( current );
+		
+		// check
+		if ( current == to )
+		{
+			return ligament.path;
+		}
+		else
+		{
+			// push all unvisited neighbours to the queue
+			set<int> neighbours = this->getAllNeighboursOf( current );
+			for ( set<int>::iterator it = neighbours.begin(); it != neighbours.end(); ++it )
+			{
+				if ( visited.find(*it)==visited.end() )
+				{
+					ligament.next = *it;
+					
+					// calculate fitness as path length * direction coefficient
+					// where direction coefficient is 1 if newDirection == ligament.direction, -1 if newDirection is opposite ligamentDirection
+					ligament.fitness = 1.0f/ligament.path.size();
+					btVector3 newDirection = (this->getNode(*it).m_x - startPos).normalized();
+					if ( ligament.path.size() < 2 )
+					{
+						ligament.direction = newDirection;
+						ligament.fitness += 1;
+					}
+					else
+					{
+						float dirFactor = ligament.direction.dot( newDirection );
+						ligament.fitness += dirFactor;
+					}
+					queue.push( ligament );
+				}
+			}
+		}
+	}
+	
+	// nothing found
+	return vector<int>();
 }
 
 void ofxBulletBaseSoftShape::createFromCuboid( btSoftRigidDynamicsWorld* a_world, ofVec3f topleftback, ofVec3f bottomrightfront, int countX, int countY, int countZ, float totalMass  )
@@ -223,7 +300,6 @@ void ofxBulletBaseSoftShape::createFromCuboid( btSoftRigidDynamicsWorld* a_world
 	
 	_softBody->randomizeConstraints();
 	
-	_mass = totalMass;
 	_softBody->setTotalMass(totalMass);
 	setProperties(.4, .1);
 	
@@ -273,8 +349,8 @@ void ofxBulletBaseSoftShape::createFromPatch( btSoftRigidDynamicsWorld* a_world,
 
 	_softBody->randomizeConstraints();
 
-	_mass = 5.0;
-	_softBody->setTotalMass(_mass);
+	float mass=5;
+	_softBody->setTotalMass(mass);
 	setProperties(.4, .1);
 	
 	_softBody->m_cfg.citerations = 4;
@@ -428,7 +504,6 @@ void ofxBulletBaseSoftShape::appendTetGenFaces( const char* face, bool makeFaceL
 void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr,
 												   float a_mass, float scale, float springStrength, float bendingConstraintsSpringStrength, float borderSpringStrength ) {
 	
-	_mass = a_mass;
 	_world = a_world;
 
 	bool makeFaceLinks = true;
@@ -492,7 +567,9 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	_softBody->m_cfg.piterations = 4;
 	_softBody->m_cfg.viterations = 4;*/
 	
-	_softBody->m_cfg.piterations=2;
+	_softBody->m_cfg.piterations=8;
+	_softBody->m_cfg.viterations=2;
+	_softBody->m_cfg.diterations=1;
 	_softBody->m_cfg.kDF			=0.8;
 	_softBody->m_cfg.kVC = 1.0f;
 	_softBody->m_cfg.kSHR = 1.0f;
@@ -511,7 +588,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 
 	_softBody->getCollisionShape()->setMargin(0.2);
 	
-	_softBody->setPose( true, true );
+	_softBody->setPose( true, false );
 
 	
 	_softBody->randomizeConstraints();
@@ -526,7 +603,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 
 	//_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
 	//_softBody->m_cfg.piterations = 2;
-	_softBody->setVolumeDensity( a_mass );
+	_softBody->setTotalMass( a_mass );
 }
 
 
@@ -543,7 +620,6 @@ void ofxBulletBaseSoftShape::createFromOfMesh( btSoftRigidDynamicsWorld* a_world
 		ofLog(OF_LOG_ERROR, "ofxBulletBaseSoftShape :: create : a_world param is NULL");
 		return;
 	}
-	_mass			= a_mass;
 	_world			= a_world;
 	
 	_bCreated		= true;
@@ -679,16 +755,12 @@ int ofxBulletBaseSoftShape::getActivationState() {
 
 //--------------------------------------------------------------
 float ofxBulletBaseSoftShape::getMass() const {
-	return _mass;
+	return _softBody->getTotalMass();
 }
 
 
 void ofxBulletBaseSoftShape::setMass(float mass) {
-	_mass = mass;
-	for ( int i=0; i<_softBody->m_nodes.size(); i++ ) {
-		_softBody->setMass( i, 0 );
-	}
-	_softBody->setVolumeMass(mass);
+	_softBody->setTotalMass( mass, false, true );
 }
 
 
@@ -948,16 +1020,16 @@ int ofxBulletBaseSoftShape::getMaterialIndexForLink(int linkIndex) {
 		if ( l.m_material == _softBody->m_materials[i] )
 			return i;
 	}
+	assert(false);
 	return -1;
 }
 
 int ofxBulletBaseSoftShape::getIndexOfNode(btSoftBody::Node *n) {
-	for ( int i=0; i<_softBody->m_nodes.size(); i++ ) {
-		if ( &(_softBody->m_nodes[i]) == n ) {
-			return i;
-		}
-	}
-	return -1;
+	int index = n - &(_softBody->m_nodes[0]);
+	if ( index <0 || index >= _softBody->m_nodes.size() )
+		return -1;
+	else
+		return index;
 }
 
 set<int> ofxBulletBaseSoftShape::getAllLinksTouching( int nodeIndex ) {
