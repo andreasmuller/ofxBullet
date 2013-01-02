@@ -552,43 +552,66 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
 	
+	//_softBody->m_cfg.collisions	= btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS;
 	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
-	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::VF_SS;
-	_softBody->m_cfg.collisions		|=	btSoftBody::fCollision::CL_SS;
-	_softBody->m_cfg.collisions		|=	btSoftBody::fCollision::CL_RS;
+//	_softBody->m_cfg.collisions = 0;
 	_softBody->randomizeConstraints();
 	
 /*
+		m_cfg.kVCF			=	1;
+	m_cfg.kDG			=	0;
+	m_cfg.kLF			=	0;
+	m_cfg.kDP			=	0;
+	m_cfg.kPR			=	0;
+	m_cfg.kVC			=	0;
+	m_cfg.kDF			=	(btScalar)0.2;
+	m_cfg.kMT			=	0;
+	m_cfg.kCHR			=	(btScalar)1.0;
+	m_cfg.kKHR			=	(btScalar)0.1;
+	m_cfg.kSHR			=	(btScalar)1.0;
+	m_cfg.kAHR			=	(btScalar)0.7;
+	m_cfg.kSRHR_CL		=	(btScalar)0.1;
+	m_cfg.kSKHR_CL		=	(btScalar)1;
+	m_cfg.kSSHR_CL		=	(btScalar)0.5;
+	m_cfg.kSR_SPLT_CL	=	(btScalar)0.5;
+	m_cfg.kSK_SPLT_CL	=	(btScalar)0.5;
+	m_cfg.kSS_SPLT_CL	=	(btScalar)0.5;
+	m_cfg.maxvolume		=	(btScalar)1;
+	m_cfg.timescale		=	1;
+	m_cfg.viterations	=	0;
+	m_cfg.piterations	=	1;	
+	m_cfg.diterations	=	0;
+	m_cfg.citerations	=	4;
+*/
+/*	_softBody->m_cfg.citerations=0;
+	_softBody->m_cfg.piterations=1;
+	_softBody->m_cfg.viterations=0;
+	_softBody->m_cfg.diterations=0;
+	_softBody->m_cfg.kAHR = 1.0f; // anchors hardness
+	_softBody->m_cfg.kDF			=0.2; // dynamic friction 0..1
+	_softBody->m_cfg.kVC = 1.0f; // volume conservation 0..inf
+	_softBody->m_cfg.kSHR = 1.0f; // soft contacts hardness 0..1
+	_softBody->m_cfg.kCHR = 1.0f; // rigid contacts hardness 0..1
+	_softBody->m_cfg.kSRHR_CL		= 0.1f; // soft vs rigid hardness
+	_softBody->m_cfg.kSKHR_CL		= 1.0f; // soft vs kinetic hardness
+	_softBody->m_cfg.kSSHR_CL		= 0.5f; // soft vs soft hardness
+	_softBody->m_cfg.kSR_SPLT_CL	= 0.5f; // soft vs rigid impulse split
+	_softBody->m_cfg.kSK_SPLT_CL	= 0.5f; // soft vs kinetic impulse split
+	_softBody->m_cfg.kSS_SPLT_CL	= 0.5f; // soft vs soft impulse split
 	
-	_softBody->m_cfg.kSSHR_CL = 0.5f;
-	_softBody->m_cfg.kSHR = 0.5f;
-	_softBody->m_cfg.citerations = 4;
-	_softBody->m_cfg.diterations = 4;
-	_softBody->m_cfg.piterations = 4;
-	_softBody->m_cfg.viterations = 4;*/
-	
-	_softBody->m_cfg.piterations=8;
-	_softBody->m_cfg.viterations=2;
-	_softBody->m_cfg.diterations=1;
-	_softBody->m_cfg.kDF			=0.8;
-	_softBody->m_cfg.kVC = 1.0f;
-	_softBody->m_cfg.kSHR = 1.0f;
-	_softBody->m_cfg.kCHR = 1.0f;
-	_softBody->m_cfg.kSSHR_CL		=0.8;
-	_softBody->m_cfg.kSS_SPLT_CL	=0.5;
-	_softBody->m_cfg.kSRHR_CL		=0.5f;
-	_softBody->m_cfg.kSKHR_CL		=0.1f;
-	_softBody->m_cfg.kSK_SPLT_CL	=0.5;
 	
 	_softBody->m_cfg.kTetraPressure = 0;
+	_softBody->m_cfg.kHydrostatic = 0;
+	*/
 
 	/*_softBody->m_cfg.collisions=	btSoftBody::fCollision::CL_SS+
 	btSoftBody::fCollision::CL_RS;*/
 	//_softBody->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::VF_SS;
 
-	_softBody->getCollisionShape()->setMargin(0.2);
+	assert(_softBody->getCollisionShape());
+	_softBody->getCollisionShape()->setMargin(0.1);
 	
-	_softBody->setPose( true, false );
+	//_softBody->setPose( true, false );
 
 	
 	_softBody->randomizeConstraints();
