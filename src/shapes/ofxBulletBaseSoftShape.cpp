@@ -552,41 +552,15 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
 	
-	//_softBody->m_cfg.collisions	= btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS;
+	_softBody->m_cfg.collisions	= btSoftBody::fCollision::CL_RS;
 	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
 //	_softBody->m_cfg.collisions = 0;
 	_softBody->randomizeConstraints();
 	
-/*
-		m_cfg.kVCF			=	1;
-	m_cfg.kDG			=	0;
-	m_cfg.kLF			=	0;
-	m_cfg.kDP			=	0;
-	m_cfg.kPR			=	0;
-	m_cfg.kVC			=	0;
-	m_cfg.kDF			=	(btScalar)0.2;
-	m_cfg.kMT			=	0;
-	m_cfg.kCHR			=	(btScalar)1.0;
-	m_cfg.kKHR			=	(btScalar)0.1;
-	m_cfg.kSHR			=	(btScalar)1.0;
-	m_cfg.kAHR			=	(btScalar)0.7;
-	m_cfg.kSRHR_CL		=	(btScalar)0.1;
-	m_cfg.kSKHR_CL		=	(btScalar)1;
-	m_cfg.kSSHR_CL		=	(btScalar)0.5;
-	m_cfg.kSR_SPLT_CL	=	(btScalar)0.5;
-	m_cfg.kSK_SPLT_CL	=	(btScalar)0.5;
-	m_cfg.kSS_SPLT_CL	=	(btScalar)0.5;
-	m_cfg.maxvolume		=	(btScalar)1;
-	m_cfg.timescale		=	1;
-	m_cfg.viterations	=	0;
-	m_cfg.piterations	=	1;	
-	m_cfg.diterations	=	0;
-	m_cfg.citerations	=	4;
-*/
-/*	_softBody->m_cfg.citerations=0;
-	_softBody->m_cfg.piterations=1;
-	_softBody->m_cfg.viterations=0;
-	_softBody->m_cfg.diterations=0;
+	_softBody->m_cfg.citerations=4;
+	_softBody->m_cfg.piterations=8;
+	_softBody->m_cfg.viterations=4;
+	_softBody->m_cfg.diterations=2;
 	_softBody->m_cfg.kAHR = 1.0f; // anchors hardness
 	_softBody->m_cfg.kDF			=0.2; // dynamic friction 0..1
 	_softBody->m_cfg.kVC = 1.0f; // volume conservation 0..inf
@@ -602,16 +576,12 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	_softBody->m_cfg.kTetraPressure = 0;
 	_softBody->m_cfg.kHydrostatic = 0;
-	*/
-
-	/*_softBody->m_cfg.collisions=	btSoftBody::fCollision::CL_SS+
-	btSoftBody::fCollision::CL_RS;*/
-	//_softBody->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::VF_SS;
+	
 
 	assert(_softBody->getCollisionShape());
 	_softBody->getCollisionShape()->setMargin(0.1);
 	
-	//_softBody->setPose( true, false );
+	_softBody->setPose( true, false );
 
 	
 	_softBody->randomizeConstraints();
@@ -1084,10 +1054,10 @@ set<int> ofxBulletBaseSoftShape::getAllNeighboursOf( int nodeIndex ){
 }
 
 float ofxBulletBaseSoftShape::getRestVolume() const {
-	double v = 0;
-	for ( int i=0; i<_softBody->m_tetras.size(); i++ )
-		v += _softBody->m_tetras[i].m_rv;
-	return v;
+	if ( _softBody->m_pose.m_volume )
+		return _softBody->m_pose.m_volume;
+	else
+		return 0;
 }
 
 float ofxBulletBaseSoftShape::getVolume() const {
