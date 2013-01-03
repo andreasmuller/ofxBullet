@@ -541,7 +541,7 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	// add faces
 	appendTetGenFaces( faceFile.getBinaryBuffer(), makeFaceLinks, faceMaterial );
 	// create bending constraints for face links
-	_softBody->generateBendingConstraints(3, bendingConstraintsMaterial);
+	//_softBody->generateBendingConstraints(3, bendingConstraintsMaterial);
 	
 	
 	// add tetras
@@ -942,6 +942,16 @@ float ofxBulletBaseSoftShape::getVolumeConservationCoefficient()
 	return _softBody->m_cfg.kVC;
 }
 
+float ofxBulletBaseSoftShape::getHydrostaticConstant() const
+{
+	return _softBody->m_cfg.kHydrostatic;
+}
+
+void ofxBulletBaseSoftShape::setHydrostaticConstant( float hydroConstant )
+{
+	_softBody->m_cfg.kHydrostatic = hydroConstant;
+}
+
 
 void ofxBulletBaseSoftShape::setDamping( float damping ) // 0..1, 1 = fully damped
 {
@@ -1084,3 +1094,12 @@ void ofxBulletBaseSoftShape::anchorNode( int nodeIndex, btRigidBody* anchorBody,
 	_softBody->appendAnchor( nodeIndex, anchorBody, offset );
 }
 
+/*void ofxBulletBaseSoftShape::()
+{
+	// Van Gelder, A., “Approximate Simulation of Elastic Membranes by Triangulated Spring Meshes"
+	// kc = (E2*Area(Te)) / (|c|^2) when rho=0 , E2 = young's modulus, rho = poisson
+	
+	int numMaterials = _softBody->m_materials.size();
+	
+	
+}*/

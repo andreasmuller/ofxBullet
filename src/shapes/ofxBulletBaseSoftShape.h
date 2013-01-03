@@ -92,6 +92,9 @@ public:
 	float getMass() const;
 	void setMass( float mass );
 	
+	float getHydrostaticConstant() const;
+	void setHydrostaticConstant( float hydroConstant );
+	
 	float getVolume() const;
 	float getRestVolume() const;
 	float calculateVolumeOfTetras() const;
@@ -144,7 +147,12 @@ public:
 	int addMaterial() { _softBody->appendMaterial(); return _softBody->m_materials.size()-1; }
 	void setMaterialSpringConstant( int matIndex, float springConstant ) { _softBody->m_materials[matIndex]->m_kLST = springConstant; _softBody->updateLinkConstants(); }
 	float getMaterialSpringConstant( int matIndex ) { return _softBody->m_materials[matIndex]->m_kLST; }
-	int getExternalMaterialIndex() { return 1; }
+	int getExternalMaterialIndex() { return (_softBody->m_materials.size()>0?1:0); }
+	int getBendingConstraintsMaterialIndex() { return (_softBody->m_materials.size()>1?2:0); }
+	
+	// equalize spring lengths based on material properties
+	void equalizeSpringLengths();
+	
 	
 	// perform after adding a link, done automatically unless addLink was called with suppressGenerateClusters==true
 	void generateClusters( int clusterSize=0 ) { _softBody->generateClusters( clusterSize ); }
@@ -165,6 +173,8 @@ protected:
 	bool						_bAdded;
 	
 	set<int>					externalNodes;
+	
+	vector<float>				springLengthForceMultipliers;
 	
 	btSoftBody* createSoftBodyWithTetGenNodes( btSoftBodyWorldInfo& worldInfo, const char* node );
 	void appendTetGenFaces( const char* face, bool makeFaceLinks, btSoftBody::Material* linkMaterial );
