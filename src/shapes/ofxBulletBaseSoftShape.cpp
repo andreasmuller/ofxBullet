@@ -552,8 +552,8 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
 	
-	_softBody->m_cfg.collisions	= btSoftBody::fCollision::CL_RS;
-	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
+	_softBody->m_cfg.collisions	= btSoftBody::fCollision::CL_RS | btSoftBody::fCollision::CL_SS;
+//	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
 //	_softBody->m_cfg.collisions = 0;
 	_softBody->randomizeConstraints();
 	
@@ -1091,7 +1091,14 @@ float ofxBulletBaseSoftShape::calculateVolumeOfTetras() const {
 void ofxBulletBaseSoftShape::anchorNode( int nodeIndex, btRigidBody* anchorBody, ofVec3f offs )
 {
 	btVector3 offset = btVector3(offs.x, offs.y, offs.z);
-	_softBody->appendAnchor( nodeIndex, anchorBody, offset );
+	// don't double-append
+	for ( int i=0; i<_softBody->m_anchors.size(); ++i ) {
+		if ( _softBody->m_anchors[i].m_node == &getNode(nodeIndex) ) {
+			ofLogWarning("ofxBulletBaseSoftShape") << "trying to double-anchor node " << nodeIndex << ", bailing out";
+			return;
+		}
+	}
+	_softBody->appendAnchor( nodeIndex, anchorBody, offset, true  );
 }
 
 /*void ofxBulletBaseSoftShape::()
