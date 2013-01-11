@@ -103,6 +103,49 @@ vector<int> ofxBulletBaseSoftShape::findShortestPath( int from, int to )
 	return vector<int>();
 }
 
+
+void ofxBulletBaseSoftShape::setTetraCollisionParams() {
+		
+	_softBody->m_cfg.collisions	= btSoftBody::fCollision::CL_RS | btSoftBody::fCollision::CL_SS;
+//	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
+//	_softBody->m_cfg.collisions = 0;
+	_softBody->randomizeConstraints();
+	
+	_softBody->m_cfg.citerations=8;
+	_softBody->m_cfg.viterations=8;
+	_softBody->m_cfg.diterations=2;
+	_softBody->m_cfg.piterations=8;
+	_softBody->m_cfg.kAHR = 1.0f; // anchors hardness
+	_softBody->m_cfg.kDF			=1.0; // dynamic friction 0..1
+	_softBody->m_cfg.kSHR = 1.0f; // soft contacts hardness 0..1
+	_softBody->m_cfg.kCHR = 1.0f; // rigid contacts hardness 0..1
+	_softBody->m_cfg.kSRHR_CL		= 0.8f; // soft vs rigid hardness
+	_softBody->m_cfg.kSKHR_CL		= 1.0f; // soft vs kinetic hardness
+	_softBody->m_cfg.kSSHR_CL		= 1.0f; // soft vs soft hardness
+	_softBody->m_cfg.kSR_SPLT_CL	= 0.5f; // soft vs rigid impulse split
+	_softBody->m_cfg.kSK_SPLT_CL	= 0.5f; // soft vs kinetic impulse split
+	_softBody->m_cfg.kSS_SPLT_CL	= 0.f; // soft vs soft impulse split
+	
+	
+	_softBody->m_cfg.kTetraPressure = 0;
+	_softBody->m_cfg.kHydrostatic = 0;
+	
+
+	assert(_softBody->getCollisionShape());
+	_softBody->getCollisionShape()->setMargin(0.3);
+	
+	_softBody->setPose( true, false );
+
+	
+	_softBody->randomizeConstraints();
+	setProperties(.4, .1);
+	
+
+	_softBody->m_materials[0]->m_flags |= btSoftBody::fMaterial::DebugDraw;
+	_softBody->generateClusters(0);
+	
+}
+
 void ofxBulletBaseSoftShape::createFromCuboid( btSoftRigidDynamicsWorld* a_world, ofVec3f topleftback, ofVec3f bottomrightfront, int countX, int countY, int countZ, float totalMass  )
 {
 
@@ -193,25 +236,25 @@ void ofxBulletBaseSoftShape::createFromCuboid( btSoftRigidDynamicsWorld* a_world
 					
 					// add faces
 					if ( j==J-1 ) {
-						_softBody->appendFace( p6, p7, p4 );
-						_softBody->appendFace( p4, p5, p6 );
+						_softBody->appendFace( p4, p7, p6 );
+						_softBody->appendFace( p4, p6, p5 );
 					}
 					if ( j==0 )	{
 						_softBody->appendFace( p3, p1, p2 );
 						_softBody->appendFace( p0, p1, p3 );
 					}
 					if ( k==K-1 ){
-						_softBody->appendFace( p1, p2, p6 );
-						_softBody->appendFace( p6, p5, p1 );
+						_softBody->appendFace( p1, p6, p2 );
+						_softBody->appendFace( p1, p5, p6 );
 					}
 					if ( k==0 )	{
-						_softBody->appendFace( p4, p7, p3 );
-						_softBody->appendFace( p4, p3, p0 );
+						_softBody->appendFace( p4, p3, p7 );
+						_softBody->appendFace( p4, p0, p3 );
 					}
 					
 					if ( i==0 )	{
-						_softBody->appendFace( p1, p5, p4 );
-						_softBody->appendFace( p4, p0, p1 );
+						_softBody->appendFace( p4, p5, p1 );
+						_softBody->appendFace( p4, p1, p0 );
 					}
 					if ( i==I-1 ) {
 						_softBody->appendFace( p6, p7, p3 );
@@ -283,39 +326,10 @@ void ofxBulletBaseSoftShape::createFromCuboid( btSoftRigidDynamicsWorld* a_world
 	_bCreated = true;
 	_softBody->m_materials[0]->m_kLST	=	0.9f;
 
-	_softBody->m_cfg.piterations=2;
-	_softBody->m_cfg.citerations=4;
-	_softBody->m_cfg.kDF			=0.5;
-	_softBody->m_cfg.kCHR			= 1.0f;
-	_softBody->m_cfg.kSHR			= 1.0f;
-	_softBody->m_cfg.kSRHR_CL		= 1.0f;
-	_softBody->m_cfg.kSR_SPLT_CL	= 0.5f;
-	_softBody->m_cfg.kSSHR_CL		=0.8;
-	_softBody->m_cfg.kSS_SPLT_CL	=0.5;
-/*	_softBody->m_cfg.kSKHR_CL		=0.1f;
-	_softBody->m_cfg.kSK_SPLT_CL	=1;*/
-	_softBody->m_cfg.collisions=	btSoftBody::fCollision::CL_SS+
-	 btSoftBody::fCollision::CL_RS;
-	
-	
-//	_softBody->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::VF_SS;
-	_softBody->getCollisionShape()->setMargin(0.1);
-	
-	_softBody->randomizeConstraints();
-	
 	_softBody->setTotalMass(totalMass);
-	setProperties(.4, .1);
-	
-	_softBody->m_cfg.citerations = 4;
-	_softBody->m_cfg.diterations = 4;
-	_softBody->m_cfg.piterations = 4;
-	_softBody->m_cfg.viterations = 4;
-	
-	
-	
-	
-	_softBody->generateClusters(0);
-	
+	setTetraCollisionParams();
+
+
 
 }
 
@@ -553,53 +567,9 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	// config
 	
-	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
-	
-	_softBody->m_cfg.collisions	= btSoftBody::fCollision::CL_RS | btSoftBody::fCollision::CL_SS;
-//	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
-//	_softBody->m_cfg.collisions = 0;
-	_softBody->randomizeConstraints();
-	
-	_softBody->m_cfg.citerations=8;
-	_softBody->m_cfg.piterations=8;
-	_softBody->m_cfg.viterations=8;
-	_softBody->m_cfg.diterations=2;
-	_softBody->m_cfg.kAHR = 1.0f; // anchors hardness
-	_softBody->m_cfg.kDF			=0.2; // dynamic friction 0..1
-	_softBody->m_cfg.kVC = 1.0f; // volume conservation 0..inf
-	_softBody->m_cfg.kSHR = 1.0f; // soft contacts hardness 0..1
-	_softBody->m_cfg.kCHR = 1.0f; // rigid contacts hardness 0..1
-	_softBody->m_cfg.kSRHR_CL		= 0.8f; // soft vs rigid hardness
-	_softBody->m_cfg.kSKHR_CL		= 1.0f; // soft vs kinetic hardness
-	_softBody->m_cfg.kSSHR_CL		= 0.8f; // soft vs soft hardness
-	_softBody->m_cfg.kSR_SPLT_CL	= 0.5f; // soft vs rigid impulse split
-	_softBody->m_cfg.kSK_SPLT_CL	= 0.5f; // soft vs kinetic impulse split
-	_softBody->m_cfg.kSS_SPLT_CL	= 0.5f; // soft vs soft impulse split
-	
-	
-	_softBody->m_cfg.kTetraPressure = 0;
-	_softBody->m_cfg.kHydrostatic = 0;
-	
-
-	assert(_softBody->getCollisionShape());
-	_softBody->getCollisionShape()->setMargin(0.3);
-	
-	_softBody->setPose( true, false );
-
-	
-	_softBody->randomizeConstraints();
-
-
-	_softBody->generateClusters(0);
-	
-	setProperties(.4, .5);
-	
-	
-	//_softBody->m_cfg.collisions	=	btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS;
-
-	//_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
-	//_softBody->m_cfg.piterations = 2;
 	_softBody->setTotalMass( a_mass );
+	setTetraCollisionParams();
+
 }
 
 

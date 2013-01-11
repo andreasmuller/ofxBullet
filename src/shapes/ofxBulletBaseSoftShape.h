@@ -180,6 +180,7 @@ protected:
 	void appendTetGenFaces( const char* face, bool makeFaceLinks, btSoftBody::Material* linkMaterial );
 	void appendTetGenTetras( const char* ele, bool makeTetraLinks, btSoftBody::Material* linkMaterial );
 	
+	void setTetraCollisionParams();
 };
 
 
