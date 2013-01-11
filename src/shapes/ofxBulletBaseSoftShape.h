@@ -33,7 +33,7 @@ public:
 	virtual void createFromTetraBuffer( btSoftRigidDynamicsWorld* a_world, ofBuffer& eleFile, ofBuffer& faceFile, ofBuffer& nodeFile, btTransform a_bt_tr,
 									   float mass, float scale, float internalSpringStrength=1.0f, float bendingConstraintsSpringStrength=-1, float borderSpringStrength=-1 );
 	virtual void createFromOfMesh( btSoftRigidDynamicsWorld* a_world, const ofMesh& a_mesh, btTransform a_bt_tr, float a_mass, float scale );
-	virtual void createFromPatch( btSoftRigidDynamicsWorld* a_world, ofVec3f topleft, ofVec3f topright, ofVec3f bottomleft, ofVec3f bottomright );
+	virtual void createFromPatch( btSoftRigidDynamicsWorld* a_world, ofVec3f topleft, ofVec3f topright, ofVec3f bottomleft, ofVec3f bottomright, float mass );
 	virtual void createFromCuboid( btSoftRigidDynamicsWorld* a_world, ofVec3f topleftback, ofVec3f bottomrightfront, int countX, int countY, int countZ, float totalMass  );
 
 	
@@ -180,7 +180,7 @@ protected:
 	void appendTetGenFaces( const char* face, bool makeFaceLinks, btSoftBody::Material* linkMaterial );
 	void appendTetGenTetras( const char* ele, bool makeTetraLinks, btSoftBody::Material* linkMaterial );
 	
-	void setTetraCollisionParams();
+	void setClusterCollisionParams();
 };
 
 

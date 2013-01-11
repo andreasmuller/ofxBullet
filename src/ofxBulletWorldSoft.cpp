@@ -83,7 +83,7 @@ void ofxBulletWorldSoft::setup() {
 	Joints		=	0x1000,
 	Std			=	Links+Faces+Tetras+Anchors+Notes+Joints,
 	StdTetra	=	Std-Faces+Tetras*/
-	world->setDrawFlags(fDrawFlags::Links | fDrawFlags::Clusters | fDrawFlags::Normals );
+	world->setDrawFlags(fDrawFlags::Links | fDrawFlags::Normals | fDrawFlags::Joints | fDrawFlags::ClusterTree );
 
 
 }
