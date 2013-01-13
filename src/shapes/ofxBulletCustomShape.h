@@ -24,7 +24,7 @@ public:
 	void create( btDynamicsWorld* a_world, btTransform a_bt_tr, float a_mass=1.f );
 	
 	bool addShape( btCollisionShape* a_colShape, ofVec3f a_localCentroidPos );
-	bool addMesh(ofMesh a_mesh, ofVec3f a_localScaling, bool a_bUseConvexHull);
+	bool addMesh(ofMesh a_mesh, ofVec3f a_localScaling, bool a_bUseConvexHull, bool a_bCenterVerticesOnCentroid = true );
 	void add();
 	
 	ofVec3f getCentroid();

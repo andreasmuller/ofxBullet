@@ -64,7 +64,7 @@ bool ofxBulletCustomShape::addShape( btCollisionShape* a_colShape, ofVec3f a_loc
 }
 
 //--------------------------------------------------------------
-bool ofxBulletCustomShape::addMesh( ofMesh a_mesh, ofVec3f a_localScaling, bool a_bUseConvexHull ) {
+bool ofxBulletCustomShape::addMesh( ofMesh a_mesh, ofVec3f a_localScaling, bool a_bUseConvexHull, bool centerVerticesOnCentroid ) {
 	if(a_mesh.getMode() != OF_PRIMITIVE_TRIANGLES) {
 		ofLog( OF_LOG_ERROR, "ofxBulletCustomShape :: addMesh : mesh must be set to OF_PRIMITIVE_TRIANGLES!! aborting");
 		return false;
@@ -88,6 +88,9 @@ bool ofxBulletCustomShape::addMesh( ofMesh a_mesh, ofVec3f a_localScaling, bool 
 		}
 		centroid /= (float)verticies.size();
 		
+		// only actually use the centroid if we should
+		if ( !centerVerticesOnCentroid )
+			centroid = btVector3(0,0,0);
 		vector<btVector3> newVerts;
 		for ( int i = 0; i < indicies.size(); i++) {
 			btVector3 vertex( verticies[indicies[i]].x, verticies[indicies[i]].y, verticies[indicies[i]].z);
@@ -142,6 +145,8 @@ bool ofxBulletCustomShape::addMesh( ofMesh a_mesh, ofVec3f a_localScaling, bool 
 		//printf("ofxBulletCustomShape :: addMesh : new hull numIndices = %d\n", hull->numIndices());
 		//printf("ofxBulletCustomShape :: addMesh : new hull numVertices = %d\n", hull->numVertices());
 		
+		if ( !centerVerticesOnCentroid )
+			centroid = btVector3(0,0,0);
 		btConvexHullShape* convexShape = new btConvexHullShape();
 		for (int i=0;i<hull->numVertices();i++) {
 			convexShape->addPoint(hull->getVertexPointer()[i] - centroid);

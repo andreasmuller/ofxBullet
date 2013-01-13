@@ -96,8 +96,11 @@ static void ofSetRotationRigidBody( btRigidBody* a_rb, float a_yaw, float a_pitc
 */
 
 static void ofGetOpenGLMatrixFromRigidBody( btRigidBody* a_rb, btScalar* a_m ) {
+	static __attribute__((aligned(16))) btScalar a_mAligned[16];
 	btDefaultMotionState* myMotionState = (btDefaultMotionState*)a_rb->getMotionState();
-	myMotionState->m_graphicsWorldTrans.getOpenGLMatrix( a_m );
+	myMotionState->m_graphicsWorldTrans.getOpenGLMatrix( a_mAligned );
+	for ( int i=0; i<16; i++ )
+		a_m[i] = a_mAligned[i];
 }
 
 
