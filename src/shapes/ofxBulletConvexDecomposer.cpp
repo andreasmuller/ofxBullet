@@ -116,11 +116,20 @@ pair<btVector3,btConvexHullShape*> createConvexHullShapeFromConvexResult(ConvexR
 	return make_pair(centroid,convexShape);
 }
 
+/*HACD::CallBackFunction*/
+bool hacdCallback( const char* msg, double progress, double globalConcavity, size_t nVerts )
+{
+	ofLogVerbose("ofxBulletConvexDecomposer") << "HACD progress: " << msg;
+}
 
 vector<pair<btVector3, btConvexHullShape*> > ofxBulletConvexDecomposer::decompose(const ofMesh &meshToDecompose, btVector3 scale )
 {
 	assert( meshToDecompose.getMode() == OF_TRIANGLES_MODE );
+	vector<pair<btVector3, btConvexHullShape*> > convexShapes;
 	int tcount = meshToDecompose.getNumIndices()/3;
+	if ( tcount == 0 )
+		// nothing to do
+		return convexShapes;
 	
 	// adapted from bullet-2.81-rev2613/Demos/ConvexDecompositionDemo/ConvexDecompositionDemo.cpp
 	
@@ -160,11 +169,12 @@ vector<pair<btVector3, btConvexHullShape*> > ofxBulletConvexDecomposer::decompos
 		points.push_back(vertex);
 	}
 	
-	for(int i=0;i<meshToDecompose.getNumIndices()/3; i+=3 )
+	for(int i=0;i<meshToDecompose.getNumIndices(); i+=3 )
 	{
-		HACD::Vec3<long> triangle(meshToDecompose.getIndex(i+2), meshToDecompose.getIndex(i+1), meshToDecompose.getIndex(i) );
+		HACD::Vec3<long> triangle(meshToDecompose.getIndex(i), meshToDecompose.getIndex(i+1), meshToDecompose.getIndex(i+2) );
 		triangles.push_back(triangle);
 	}
+	assert(triangles.size()==tcount);
 	
 	
 	HACD::HACD myHACD;
@@ -191,18 +201,21 @@ vector<pair<btVector3, btConvexHullShape*> > ofxBulletConvexDecomposer::decompos
 	myHACD.SetAddNeighboursDistPoints(addNeighboursDistPoints);
 	myHACD.SetAddFacesPoints(addFacesPoints);
 	
+	myHACD.SetCallBack( hacdCallback );
+	
 	myHACD.Compute();
 	nClusters = myHACD.GetNClusters();
 	
 	
 	
-	vector<pair<btVector3, btConvexHullShape*> > convexShapes;
+	int totalTriangles = 0;
+	int totalPoints = 0;
 	for (int c=0;c<nClusters;c++)
 	{
 		//generate convex result
 		size_t nPoints = myHACD.GetNPointsCH(c);
 		size_t nTriangles = myHACD.GetNTrianglesCH(c);
-		ofLogNotice("ofxBulletConvexDecomposer") << "cluster " << c << " points " << nPoints << " triangles " << nTriangles;
+		ofLogVerbose("ofxBulletConvexDecomposer") << "cluster " << c <<"/" << nClusters << " points " << nPoints << " triangles " << nTriangles;
 		
 		float* vertices = new float[nPoints*3];
 		unsigned int* triangles = new unsigned int[nTriangles*3];
@@ -234,6 +247,8 @@ vector<pair<btVector3, btConvexHullShape*> > ofxBulletConvexDecomposer::decompos
 		delete [] trianglesCH;
 		delete [] vertices;
 		delete [] triangles;
+		
+		totalTriangles += nTriangles;
 	}
 
 	return convexShapes;

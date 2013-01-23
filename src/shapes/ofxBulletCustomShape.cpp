@@ -94,9 +94,9 @@ bool ofxBulletCustomShape::addMesh( ofMesh a_mesh, ofVec3f a_localScaling, bool 
 		btTriangleMesh* trimesh = new btTriangleMesh();
 		
 		for ( int i = 0; i < indicies.size(); i+=3) {
-			int index0 = indicies[i+2];
+			int index0 = indicies[i];
 			int index1 = indicies[i+1];
-			int index2 = indicies[i];
+			int index2 = indicies[i+2];
 			
 			btVector3 vertex0( verticies[index0].x, verticies[index0].y, verticies[index0].z );
 			btVector3 vertex1( verticies[index1].x, verticies[index1].y, verticies[index1].z );

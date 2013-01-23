@@ -56,6 +56,7 @@ void testApp::setup() {
 	}
 	
 	bDropBox	= false;
+	// can only see components and compound if bDrawDebug is true
 	bDrawDebug	= true;
 	
 	// this model is huge! scale it down 
@@ -73,7 +74,7 @@ void testApp::setup() {
 		startLoc = ofVec3f( ofRandom(-5, 5), ofRandom(0, -hwidth+5), ofRandom(-5, 5) );
 		
 		if(i == 0) {
-			for(int i = 0; i < assimpModel.getNumMeshes(); i++) {
+			for(int i = 0; i < /*assimpModel.getNumMeshes()*/1; i++) {
 				logos[i]->addMesh(assimpModel.getMesh(i), scale, true);
 			}
 		} else {
@@ -93,21 +94,32 @@ void testApp::setup() {
 	((ofxBulletSphere*)shapes[0])->setActivationState( DISABLE_DEACTIVATION );
 	shapes[0]->add();
 	
+	// add components as separate objects
+	bool addComponents = true;
+	// add compound object
+	bool addCompound = true;
 	for ( int i=0; i<assimpModel.getNumMeshes(); i++ ) {
 		ofLogNotice("testApp") << "assimp mesh " << i;
 		// now decompose the model
+		ofLogNotice("testApp") << "decomposing mesh, this could take a while, turn on verbose logging to see progress";
 		vector<pair<btVector3,btConvexHullShape*> > components = ofxBulletConvexDecomposer::decompose( assimpModel.getMesh(i), btVector3(scale.x, scale.y, scale.z) );
 		btTransform transform;
 		transform.setIdentity();
-		transform.setOrigin( btVector3( i*2, 0, 0 ) );
-		vector<ofxBulletBaseRigidShape*> componentShapes = ofxBulletConvexDecomposer::createAndAddShapesForComponents( world.world, transform, components );
-		for ( int i=0; i<componentShapes.size(); i++ )
-			shapes.push_back(componentShapes[i]);
-		
+		if ( addComponents )
+		{
+			transform.setOrigin( btVector3( i*2, 0, 0 ) );
+			vector<ofxBulletBaseRigidShape*> componentShapes = ofxBulletConvexDecomposer::createAndAddShapesForComponents( world.world, transform, components );
+			for ( int i=0; i<componentShapes.size(); i++ )
+				shapes.push_back(componentShapes[i]);
+		}
+			
 		// create a compound from the parts
-		transform.setOrigin( btVector3( i*2, 2, 0 ) );
-		ofxBulletCustomShape* custom = ofxBulletConvexDecomposer::createAndAddCustomShape( world.world, transform, components );
-		shapes.push_back(custom);
+		if ( addCompound ) {
+			transform.setIdentity();
+			transform.setOrigin( btVector3( i*2, 2, 0 ) );
+			ofxBulletCustomShape* custom = ofxBulletConvexDecomposer::createAndAddCustomShape( world.world, transform, components );
+			shapes.push_back(custom);
+		}
 	}
 		
 	
