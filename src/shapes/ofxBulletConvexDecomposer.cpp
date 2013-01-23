@@ -117,7 +117,7 @@ pair<btVector3,btConvexHullShape*> createConvexHullShapeFromConvexResult(ConvexR
 }
 
 
-vector<pair<btVector3, btConvexHullShape*> > ofxBulletConvexDecomposer::decompose(ofMesh &meshToDecompose, btVector3 scale )
+vector<pair<btVector3, btConvexHullShape*> > ofxBulletConvexDecomposer::decompose(const ofMesh &meshToDecompose, btVector3 scale )
 {
 	assert( meshToDecompose.getMode() == OF_TRIANGLES_MODE );
 	int tcount = meshToDecompose.getNumIndices()/3;
@@ -177,7 +177,7 @@ vector<pair<btVector3, btConvexHullShape*> > ofxBulletConvexDecomposer::decompos
 	
 	// HACD parameters
 	// Recommended parameters: 2 100 0 0 0 0
-	size_t nClusters = 8;
+	size_t nClusters = 2;
 	double concavity = 100;
 	bool invert = false;
 	bool addExtraDistPoints = false;
@@ -239,13 +239,12 @@ vector<pair<btVector3, btConvexHullShape*> > ofxBulletConvexDecomposer::decompos
 	return convexShapes;
 }
 
-vector<ofxBulletBaseRigidShape*> ofxBulletConvexDecomposer::createAndAddShapesForComponents( btDynamicsWorld* world, vector<pair<btVector3, btConvexHullShape*> > components ) {
+vector<ofxBulletBaseRigidShape*> ofxBulletConvexDecomposer::createAndAddShapesForComponents( btDynamicsWorld* world, btTransform transform, vector<pair<btVector3, btConvexHullShape*> > components ) {
 	vector<ofxBulletBaseRigidShape*> shapes;
 	for ( int i=0; i<components.size(); i++ ) {
 		float mass = 1;
-		btTransform transform;
-		transform.setIdentity();
-		transform.setOrigin( components[i].first );
+		btTransform thisTransform = transform;
+		thisTransform.setOrigin( transform.getOrigin()+components[i].first );
 		ofxBulletBaseRigidShape* shape = new ofxBulletBaseRigidShape();
 		shape->create(world, components[i].second, transform, mass );
 		shape->add();
@@ -253,6 +252,17 @@ vector<ofxBulletBaseRigidShape*> ofxBulletConvexDecomposer::createAndAddShapesFo
 		shapes.push_back(shape);
 	}
 	return shapes;
+}
+
+ofxBulletCustomShape* ofxBulletConvexDecomposer::createAndAddCustomShape( btDynamicsWorld* world, btTransform transform, vector<pair<btVector3, btConvexHullShape*> > components )
+{
+	btCompoundShape* compound = constructCompoundShape( components );
+	ofxBulletCustomShape* shape = new ofxBulletCustomShape();
+	shape->init( compound, ofVec3f(0,0,0) );
+	shape->create( world, transform );
+	shape->add();
+	return shape;
+	
 }
 
 btCompoundShape* ofxBulletConvexDecomposer::constructCompoundShape( vector<pair<btVector3, btConvexHullShape*> > components )
