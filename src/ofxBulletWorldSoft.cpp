@@ -83,7 +83,7 @@ void ofxBulletWorldSoft::setup() {
 	Joints		=	0x1000,
 	Std			=	Links+Faces+Tetras+Anchors+Notes+Joints,
 	StdTetra	=	Std-Faces+Tetras*/
-	world->setDrawFlags(fDrawFlags::Links | fDrawFlags::Normals | fDrawFlags::Joints | fDrawFlags::ClusterTree );
+	world->setDrawFlags(fDrawFlags::Links | fDrawFlags::Normals | fDrawFlags::Joints | fDrawFlags::Anchors | fDrawFlags::Contacts | fDrawFlags::Faces );
 
 
 }
@@ -193,17 +193,32 @@ ofxBulletRaycastData ofxBulletWorldSoft::raycastTest( ofVec3f a_rayStart, ofVec3
 	world->rayTest( rayStart, rayEnd, rayCallback );
 	
 	if (rayCallback.hasHit()) {
+		if ( rayCallback.m_collisionObject->getInternalType() & btCollisionObject::CO_SOFT_BODY ) {
+			// cast a ray into the soft body to get the point exactly
+			ofLogNotice("ofxBulletWorldSoft: soft body intersection");
+			btSoftBody::sRayCast result;
+#warning Casting (const btSoftBody*) to (btSoftBody*) -- not necessarily safe
+			btSoftBody* body = (btSoftBody*)btSoftBody::upcast( rayCallback.m_collisionObject );
+			if ( body->rayTest( rayStart, rayEnd, result ) ) {
+				if ( result.fraction<1.0f ) {
+					ofLogNotice("ofxBulletWorldSoft") << "    at " << result.getFeatureName() << " index " << result.index;
+				}
+			}
+			
+		}
+		else {
 #warning Casting (const btRigidBody*) to (btRigidBody*) -- not necessarily safe
-		btRigidBody* body = (btRigidBody*)btRigidBody::upcast(rayCallback.m_collisionObject);
-		if (body) {
-			data.bHasHit			= true;
-			data.userData			= (ofxBulletUserData*)body->getUserPointer();
-			data.body				= body;
-			data.rayWorldPos		= a_rayEnd;
-			btVector3 pickPos		= rayCallback.m_hitPointWorld;
-			data.pickPosWorld		= ofVec3f(pickPos.getX(), pickPos.getY(), pickPos.getZ());
-			btVector3 localPos		= body->getCenterOfMassTransform().inverse() * pickPos;
-			data.localPivotPos		= ofVec3f(localPos.getX(), localPos.getY(), localPos.getZ() );
+			btRigidBody* body = (btRigidBody*)btRigidBody::upcast(rayCallback.m_collisionObject);
+			if (body) {
+				data.bHasHit			= true;
+				data.userData			= (ofxBulletUserData*)body->getUserPointer();
+				data.body				= body;
+				data.rayWorldPos		= a_rayEnd;
+				btVector3 pickPos		= rayCallback.m_hitPointWorld;
+				data.pickPosWorld		= ofVec3f(pickPos.getX(), pickPos.getY(), pickPos.getZ());
+				btVector3 localPos		= body->getCenterOfMassTransform().inverse() * pickPos;
+				data.localPivotPos		= ofVec3f(localPos.getX(), localPos.getY(), localPos.getZ() );
+			}
 		}
 	}
 	return data;
@@ -288,8 +303,8 @@ void ofxBulletWorldSoft::enableDebugDraw() {
 	if(!bHasDebugDrawer) {
 		world->setDebugDrawer( new GLDebugDrawer() );
 		// DBG_DrawContactPoints DBG_DrawAabb DBG_FastWireframe
-//		world->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_MAX_DEBUG_DRAW_MODE);
-		world->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe );
+		world->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_MAX_DEBUG_DRAW_MODE);
+//		world->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawNormals );
 //		(GLDebugDrawer*)(world->getDebugDrawer())->
 		bHasDebugDrawer = true;
 	}

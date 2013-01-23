@@ -8,6 +8,7 @@
  */
 
 #include "ofxBulletCustomShape.h"
+#include "ofxBulletConvexDecomposer.h"
 
 //--------------------------------------------------------------
 ofxBulletCustomShape::ofxBulletCustomShape() {
@@ -81,36 +82,21 @@ bool ofxBulletCustomShape::addMesh( ofMesh a_mesh, ofVec3f a_localScaling, bool 
 	btVector3 centroid = btVector3(0, 0, 0);
 	
 	if(!a_bUseConvexHull) {
-		for(int i = 0; i < verticies.size(); i++) {
-			btVector3 tempVec = btVector3(verticies[i].x, verticies[i].y, verticies[i].z);
-			tempVec *= localScaling;
-			centroid += tempVec;
-		}
-		centroid /= (float)verticies.size();
+		vector<pair<btVector3, btConvexHullShape*> > components = ofxBulletConvexDecomposer::decompose( a_mesh, localScaling );
+		btCompoundShape* compound = ofxBulletConvexDecomposer::constructCompoundShape( components );
 		
-		// only actually use the centroid if we should
-		if ( !centerVerticesOnCentroid )
-			centroid = btVector3(0,0,0);
-		vector<btVector3> newVerts;
-		for ( int i = 0; i < indicies.size(); i++) {
-			btVector3 vertex( verticies[indicies[i]].x, verticies[indicies[i]].y, verticies[indicies[i]].z);
-			vertex *= localScaling;
-			vertex -= centroid;
-			newVerts.push_back(vertex);
-		}
-		
-		btConvexHullShape* convexShape = new btConvexHullShape(&(newVerts[0].getX()), newVerts.size());
-		convexShape->setMargin( 0.01f );
-		shapes.push_back( convexShape );
-		centroids.push_back( ofVec3f(centroid.getX(), centroid.getY(), centroid.getZ()) );
+		shapes.push_back( compound );
+		centroids.push_back( ofVec3f(0,0,0) );
+
+		//centroids.push_back( ofVec3f(centroid.getX(), centroid.getY(), centroid.getZ()) );
 	} else {
 		// HULL Building code from example ConvexDecompositionDemo.cpp //
 		btTriangleMesh* trimesh = new btTriangleMesh();
 		
-		for ( int i = 0; i < indicies.size()/3; i++) {
-			int index0 = indicies[i*3];
-			int index1 = indicies[i*3+1];
-			int index2 = indicies[i*3+2];
+		for ( int i = 0; i < indicies.size(); i+=3) {
+			int index0 = indicies[i+2];
+			int index1 = indicies[i+1];
+			int index2 = indicies[i];
 			
 			btVector3 vertex0( verticies[index0].x, verticies[index0].y, verticies[index0].z );
 			btVector3 vertex1( verticies[index1].x, verticies[index1].y, verticies[index1].z );

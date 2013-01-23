@@ -109,7 +109,6 @@ void ofxBulletBaseSoftShape::setClusterCollisionParams() {
 	_softBody->m_cfg.collisions	= btSoftBody::fCollision::CL_RS | btSoftBody::fCollision::CL_SS;
 //	_softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF;
 //	_softBody->m_cfg.collisions = 0;
-	_softBody->randomizeConstraints();
 	
 	_softBody->m_cfg.viterations=0;
 	_softBody->m_cfg.citerations=4;
@@ -119,7 +118,7 @@ void ofxBulletBaseSoftShape::setClusterCollisionParams() {
 	_softBody->m_cfg.kDF			=1.0; // dynamic friction 0..1
 	_softBody->m_cfg.kSHR = 1.0f; // soft contacts hardness 0..1
 	_softBody->m_cfg.kCHR = 1.0f; // rigid contacts hardness 0..1
-	_softBody->m_cfg.kSRHR_CL		= 0.8f; // soft vs rigid hardness
+	_softBody->m_cfg.kSRHR_CL		= 1.0f; // soft vs rigid hardness
 	_softBody->m_cfg.kSKHR_CL		= 1.0f; // soft vs kinetic hardness
 	_softBody->m_cfg.kSSHR_CL		= 1.0f; // soft vs soft hardness
 	_softBody->m_cfg.kSR_SPLT_CL	= 0.5f; // soft vs rigid impulse split
@@ -134,7 +133,6 @@ void ofxBulletBaseSoftShape::setClusterCollisionParams() {
 	assert(_softBody->getCollisionShape());
 	_softBody->getCollisionShape()->setMargin(0.1);
 	
-	_softBody->setPose( true, false );
 
 	
 	_softBody->randomizeConstraints();
@@ -569,7 +567,8 @@ void ofxBulletBaseSoftShape::createFromTetraBuffer( btSoftRigidDynamicsWorld* a_
 	
 	_softBody->setTotalMass( a_mass );
 	setClusterCollisionParams();
-
+	_softBody->setPose( true, false );
+	
 }
 
 
@@ -601,32 +600,14 @@ void ofxBulletBaseSoftShape::createFromOfMesh( btSoftRigidDynamicsWorld* a_world
 	int numTriangles = triangles.size()/3;
 	_softBody		= btSoftBodyHelpers::CreateFromTriMesh( a_world->getWorldInfo(), &(vertices[0].x), &triangles[0], numTriangles );
 	_softBody->scale( btVector3(scale, scale, scale));
-	setProperties(.9, .1);
+	_softBody->transform( a_bt_tr );
 	
-//	_softBody->m_materials[0]->m_kLST = 0.3f;
-	_softBody->generateBendingConstraints(3);
-	//_softBody->generateClusters(0);
-	_softBody->m_cfg.kKHR = 1.0f; // penetration with kinetic
-	_softBody->m_cfg.kCHR = 0.8; // penetration
-	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
-	_softBody->m_cfg.collisions|=btSoftBody::fCollision::VF_SS;
-//	_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
-/*	_softBody->generateClusters(5);
-	_softBody->m_cfg.piterations	=	2;
-	_softBody->m_cfg.kDF			=	0.5;
-	_softBody->m_cfg.collisions|=btSoftBody::fCollision::CL_SS;*/
-	_softBody->transform(a_bt_tr);
-	_softBody->setTotalMass(a_mass,true);
+	_softBody->setTotalMass(a_mass);
 	
-	_softBody->randomizeConstraints();
-/*	btMatrix3x3	m;
-	m.setEulerZYX(a.x(),a.y(),a.z());
-	psb->transform(btTransform(m,x));
-	psb->scale(btVector3(2,2,2));
-	psb->setTotalMass(50,true);
-	pdemo->getSoftDynamicsWorld()->addSoftBody(psb);*/
+	setClusterCollisionParams();
+	//_softBody->m_cfg.collisions |= btSoftBody::fCollision::SDF_RS;
+	
 
-	//setDamping( .25 );
 }
 
 //--------------------------------------------------------------
@@ -1059,6 +1040,12 @@ float ofxBulletBaseSoftShape::calculateVolumeOfTetras() const {
 		volume += v;
 	}
 	return volume;
+}
+
+void ofxBulletBaseSoftShape::anchorNode( int nodeIndex, btRigidBody* anchorBody ) {
+	btVector3 anchorPos = getNode(nodeIndex).m_x;
+	
+	anchorNode( nodeIndex, anchorBody, ofVec3f(anchorPos.x(), anchorPos.y(), anchorPos.z() ) );
 }
 
 void ofxBulletBaseSoftShape::anchorNode( int nodeIndex, btRigidBody* anchorBody, ofVec3f offs )

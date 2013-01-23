@@ -46,6 +46,7 @@ public:
 	// move the node with the given index to the given position. timeStep is the last simulation time step
 	void moveNode( int nodeIndex, ofVec3f pos, float timeStep );
 	
+	void anchorNode( int nodeIndex, btRigidBody* anchorBody );
 	void anchorNode( int nodeIndex, btRigidBody* anchorBody, ofVec3f offset );
 	
 	// GETTERS //
@@ -158,6 +159,15 @@ public:
 	void generateClusters( int clusterSize=0 ) { _softBody->generateClusters( clusterSize ); }
 	void generateBendingConstrings( int distance=2 ) { _softBody->generateBendingConstraints( distance, (_softBody->m_materials.size()>2)?_softBody->m_materials[2]:_softBody->m_materials[0]); }
 
+	
+	// collisions
+	// defaults to false
+	void setSelfCollisionsEnabled( bool enable ) { if ( enable ) _softBody->m_cfg.collisions |= btSoftBody::fCollision::CL_SELF; 
+												else _softBody->m_cfg.collisions &= ~btSoftBody::fCollision::CL_SELF; }
+	// defaults to 0.1
+	void setCollisionMargin( float margin ) { _softBody->getCollisionShape()->setMargin( margin ); }
+	float getCollisionMargin() { return _softBody->getCollisionShape()->getMargin(); }
+	
 	/*
 	 const btCylinderShape* cylinder = static_cast<const btCylinderShape*>(shapes[Body::UPPER]);
 	 */
