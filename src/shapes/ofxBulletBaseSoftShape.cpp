@@ -590,15 +590,20 @@ void ofxBulletBaseSoftShape::createFromOfMesh( btSoftRigidDynamicsWorld* a_world
 	_bCreated		= true;
 	
 	 
-	vector<ofVec3f> vertices = mesh.getVertices();
 
+	vector<btScalar> verticesBt;
+	for ( int i=0; i<mesh.getNumVertices(); i++ ) {
+		verticesBt.push_back( mesh.getVertex(i).x );
+		verticesBt.push_back( mesh.getVertex(i).y );
+		verticesBt.push_back( mesh.getVertex(i).z );
+	}
 	
 	vector<int> triangles;
 	for ( int i=0; i<mesh.getNumIndices(); i++ )
 		triangles.push_back( mesh.getIndex(i) );
 	
 	int numTriangles = triangles.size()/3;
-	_softBody		= btSoftBodyHelpers::CreateFromTriMesh( a_world->getWorldInfo(), &(vertices[0].x), &triangles[0], numTriangles );
+	_softBody		= btSoftBodyHelpers::CreateFromTriMesh( a_world->getWorldInfo(), &(verticesBt[0]), &triangles[0], numTriangles );
 	_softBody->scale( btVector3(scale, scale, scale));
 	_softBody->transform( a_bt_tr );
 	

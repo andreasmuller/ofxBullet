@@ -64,8 +64,12 @@ void ofxBulletCapsule::draw() {
 	
 	btScalar	m[16];
 	ofGetOpenGLMatrixFromRigidBody( _rigidBody, m );
-	glPushMatrix(); 
+	glPushMatrix();
+#ifdef BT_USE_DOUBLE_PRECISION
+	glMultMatrixd(m);
+#else
 	glMultMatrixf( m );
+#endif
 	
 	if(hull == NULL) {
 		hull = new btShapeHull((btConvexShape*)_rigidBody->getCollisionShape());

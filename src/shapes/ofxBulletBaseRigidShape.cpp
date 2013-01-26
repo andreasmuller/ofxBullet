@@ -150,7 +150,7 @@ void ofxBulletBaseRigidShape::getOpenGLMatrix( btScalar* a_m ) {
 
 //--------------------------------------------------------------
 ofMatrix4x4 ofxBulletBaseRigidShape::getTransformationMatrix() const {
-	float	m[16];
+	btScalar	m[16];
 	ofGetOpenGLMatrixFromRigidBody( _rigidBody, m );
 	ofMatrix4x4 mat;
 	mat.set(m[0], m[1], m[2], m[3],

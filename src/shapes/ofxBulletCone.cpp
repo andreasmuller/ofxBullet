@@ -86,8 +86,12 @@ void ofxBulletCone::draw() {
 	btScalar	m[16];
 	ofGetOpenGLMatrixFromRigidBody( _rigidBody, m );
 	glPushMatrix();
+#ifdef BT_USE_DOUBLE_PRECISION
+	glMultMatrixd(m);
+#else
 	glMultMatrixf( m );
-
+#endif
+	
 	glPushMatrix();
 	int upIndex		= getUpIndex();
 	float radius	= getRadius();

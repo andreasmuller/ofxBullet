@@ -76,8 +76,12 @@ void ofxBulletCylinder::draw() {
 	
 	btScalar	m[16];
 	ofGetOpenGLMatrixFromRigidBody( _rigidBody, m );
-	glPushMatrix(); 
+	glPushMatrix();
+#ifdef BT_USE_DOUBLE_PRECISION
+	glMultMatrixd( m );
+#else
 	glMultMatrixf( m );
+#endif
 	drawCylinder( getRadius(), halfHeight, upAxis );
 	glPopMatrix();
 }

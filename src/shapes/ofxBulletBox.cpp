@@ -63,7 +63,11 @@ void ofxBulletBox::draw() {
 	btScalar	m[16];
 	ofGetOpenGLMatrixFromRigidBody( _rigidBody, m );
 	glPushMatrix(); 
-	glMultMatrixf( m );
+#ifdef BT_USE_DOUBLE_PRECISION
+	glMultMatrixd(m);
+#else
+	glMultMatrixf(m);
+#endif
 	//ofBox(ofVec3f(0., 0., 0.), getSize().x);
 	ofVec3f size = getSize();
 	drawBox( size.x*.5, size.y*.5, size.z*.5);

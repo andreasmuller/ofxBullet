@@ -67,8 +67,12 @@ void ofxBulletSphere::draw() {
 	// createSphere(ofVec3f c, double r, int n, int method, double theta1, double theta2, double phi1, double phi2);
 	btScalar	m[16];
 	ofGetOpenGLMatrixFromRigidBody( _rigidBody, m );
-	glPushMatrix(); 
-	glMultMatrixf( m );
+	glPushMatrix();
+#ifdef BT_USE_DOUBLE_PRECISION
+	glMultMatrixd(m);
+#else
+	glMultMatrixf(m);
+#endif
 	//createSphere( ofGetVec3fPosFromRigidBody( _rigidBody ), getRadius(), _sphereResolution, _renderMode, 0., TWO_PI, -HALF_PI, HALF_PI );
 	createSphere(ofVec3f(0, 0, 0), getRadius(), _sphereResolution, _renderMode, 0., TWO_PI, -HALF_PI, HALF_PI );
 	glPopMatrix();
