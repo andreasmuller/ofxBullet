@@ -41,8 +41,8 @@ ofxBulletWorldSoft::~ofxBulletWorldSoft() {
 //--------------------------------------------------------------
 void ofxBulletWorldSoft::setup() {
 	if(broadphase == NULL) {
-		btVector3 worldAabbMin(-10,-10,-10);
-		btVector3 worldAabbMax(10,10,10);
+		btVector3 worldAabbMin(-1000,-1000,-1000);
+		btVector3 worldAabbMax(1000,1000,1000);
 		broadphase = new btAxisSweep3 (worldAabbMin, worldAabbMax);
 	}
 	
