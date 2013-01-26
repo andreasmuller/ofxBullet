@@ -195,13 +195,13 @@ ofxBulletRaycastData ofxBulletWorldSoft::raycastTest( ofVec3f a_rayStart, ofVec3
 	if (rayCallback.hasHit()) {
 		if ( rayCallback.m_collisionObject->getInternalType() & btCollisionObject::CO_SOFT_BODY ) {
 			// cast a ray into the soft body to get the point exactly
-			ofLogNotice("ofxBulletWorldSoft: soft body intersection");
+			//ofLogNotice("ofxBulletWorldSoft: soft body intersection");
 			btSoftBody::sRayCast result;
 #warning Casting (const btSoftBody*) to (btSoftBody*) -- not necessarily safe
 			btSoftBody* body = (btSoftBody*)btSoftBody::upcast( rayCallback.m_collisionObject );
 			if ( body->rayTest( rayStart, rayEnd, result ) ) {
 				if ( result.fraction<1.0f ) {
-					ofLogNotice("ofxBulletWorldSoft") << "    at " << result.getFeatureName() << " index " << result.index;
+					//ofLogNotice("ofxBulletWorldSoft") << "    at " << result.getFeatureName() << " index " << result.index;
 				}
 			}
 			
